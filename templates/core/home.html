@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Smart Restaurant Ordering{% endblock %}
+{% block content %}
+<h1>QR-Based Smart Restaurant Ordering System</h1>
+<p class="muted">Scan table QR to start ordering. Staff confirms first order, then customers continue without interruption.</p>
+<div class="grid">
+  <div class="card">
+    <h3>Customer</h3>
+    <p>Scan table QR and open the secure order URL.</p>
+  </div>
+  <div class="card">
+    <h3>Kitchen</h3>
+    <p>Track live queue and update item status.</p>
+  </div>
+  <div class="card">
+    <h3>Admin</h3>
+    <p>Monitor active tables, revenue, and history.</p>
+  </div>
+</div>
+<p class="muted" style="margin-top:16px;">QR print page example: <code>/tables/restaurants/demo-restaurant/qr-catalog/</code></p>
+{% endblock %}

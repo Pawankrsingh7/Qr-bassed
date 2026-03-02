@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Admin Login{% endblock %}
+{% block content %}
+<h1>Admin Login</h1>
+<p class="muted">Use admin/staff username and password.</p>
+{% if form.errors %}
+<div class="card" style="border-left:4px solid #ef4444; margin-bottom:12px;">Invalid username or password.</div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Login</button>
+  <input type="hidden" name="next" value="{{ next }}">
+</form>
+{% endblock %}

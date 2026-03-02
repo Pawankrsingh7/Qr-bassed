@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Kitchen Dashboard{% endblock %}
+{% block content %}
+<h1>Kitchen Dashboard</h1>
+<p class="muted">Use API to fetch queue: <code>GET /api/kitchen/queue/</code></p>
+<p class="muted">Update status: <code>PATCH /api/kitchen/order-items/{item_id}/status/</code></p>
+{% endblock %}

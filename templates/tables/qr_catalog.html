@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}QR Catalog{% endblock %}
+{% block content %}
+<h1>{{ restaurant.name }} - Table QR Catalog</h1>
+<p class="muted">Print and place each QR code on its table.</p>
+<div class="grid">
+  {% for table in tables %}
+    <div class="card">
+      <h3>Table {{ table.table_number }}</h3>
+      <p class="muted">PIN: <strong>{{ table.verification_pin }}</strong></p>
+      <img src="/tables/restaurants/{{ restaurant.slug }}/tables/{{ table.table_number }}/{{ table.qr_token }}/qr.svg" alt="QR for table {{ table.table_number }}" style="width: 180px; height: 180px;" />
+      <p class="muted" style="word-break: break-all; font-size: 12px;">
+        /order/{{ restaurant.slug }}/{{ table.table_number }}/{{ table.qr_token }}/
+      </p>
+    </div>
+  {% empty %}
+    <p>No active tables found.</p>
+  {% endfor %}
+</div>
+{% endblock %}
