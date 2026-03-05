@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Staff Details{% endblock %}
+{% block content %}
+<h1>Staff Details</h1>
+<p><a href="{% url 'dashboard:overview' %}?section=users">Back to Users</a></p>
+<div class="card">
+  <p><strong>UserID:</strong> {{ staff_user.username }}</p>
+  <p><strong>Name:</strong> {{ staff_user.get_full_name|default:staff_user.username }}</p>
+  <p><strong>Email:</strong> {{ staff_user.email }}</p>
+  <p><strong>Role:</strong> {% for g in staff_user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</p>
+  {% if profile %}
+    <p><strong>DOB:</strong> {{ profile.dob }}</p>
+    <p><strong>Gender:</strong> {{ profile.gender }}</p>
+    <p><strong>Phone:</strong> {{ profile.phone_number }}</p>
+    <p><strong>Aadhaar:</strong> {{ profile.aadhaar_number }}</p>
+  {% endif %}
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>Recent Confirmed Sessions</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead><tr><th>Session</th><th>Table</th><th>Status</th><th>Created</th></tr></thead>
+    <tbody>
+      {% for s in sessions %}
+      <tr><td>{{ s.id }}</td><td>{{ s.table.table_number }}</td><td>{{ s.status }}</td><td>{{ s.created_at }}</td></tr>
+      {% empty %}
+      <tr><td colspan="4">No sessions found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

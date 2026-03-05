@@ -1,138 +1,481 @@
 {% extends "base.html" %}
-{% block title %}Admin Dashboard{% endblock %}
+{% block title %}Admin Control Center{% endblock %}
 {% block content %}
-<h1>Admin Dashboard</h1>
-<p class="muted">Protected area for admin/staff operations.</p>
+<style>
+  .admin-layout { display:grid; grid-template-columns: 260px 1fr; gap:18px; }
+  .admin-side { background: linear-gradient(180deg,#0f172a,#1e293b); color:#fff; border-radius:14px; padding:16px; position: sticky; top: 16px; height: fit-content; }
+  .admin-side h3 { margin: 0 0 12px; font-size: 20px; }
+  .admin-side a { display:block; color:#cbd5e1; text-decoration:none; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
+  .admin-side a.active { background:#334155; color:#fff; font-weight:700; }
+  .admin-main { display:grid; gap:14px; }
+  .panel { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; }
+  .panel h2 { margin-top:0; }
+  .kpi { display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+  .kpi .box { border:1px solid #e2e8f0; border-radius:10px; padding:12px; background:#f8fafc; }
+  table { width:100%; border-collapse: collapse; }
+  th,td { border-bottom:1px solid #e2e8f0; text-align:left; padding:8px; vertical-align: top; }
+  .badge { padding:2px 8px; border-radius:999px; background:#eef2ff; font-size:12px; }
+  .muted-small { color:#64748b; font-size:13px; }
+  .row-form { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .row-form input,.row-form select { min-width:120px; }
+  .actions { white-space:nowrap; }
+</style>
 
 {% if messages %}
   {% for message in messages %}
-    <div class="card" style="border-left:4px solid #2563eb; margin-bottom:12px;">{{ message }}</div>
+    <div class="panel" style="border-left:4px solid #0ea5e9;">{{ message }}</div>
   {% endfor %}
 {% endif %}
 
-<div class="grid">
-  <div class="card"><h3>Total Tables</h3><p>{{ total_tables }}</p></div>
-  <div class="card"><h3>Free</h3><p>{{ free_tables }}</p></div>
-  <div class="card"><h3>In Process</h3><p>{{ active_tables }}</p></div>
-  <div class="card"><h3>Paid</h3><p>{{ paid_tables }}</p></div>
-  <div class="card"><h3>Total Revenue</h3><p>{{ total_revenue }}</p></div>
-</div>
+<div class="admin-layout">
+  <aside class="admin-side">
+    <h3>Admin Panel</h3>
+    <a href="?section=overview" class="{% if section == 'overview' %}active{% endif %}">1. Dashboard Overview</a>
+    <a href="?section=menus" class="{% if section == 'menus' %}active{% endif %}">2. Menu Management</a>
+    <a href="?section=categories" class="{% if section == 'categories' %}active{% endif %}">3. Category Management</a>
+    <a href="?section=tables" class="{% if section == 'tables' %}active{% endif %}">4. Table Management</a>
+    <a href="?section=staff" class="{% if section == 'staff' %}active{% endif %}">5. Staff Management</a>
+    <a href="?section=orders" class="{% if section == 'orders' %}active{% endif %}">6. Order Management</a>
+    <a href="?section=payments" class="{% if section == 'payments' %}active{% endif %}">7. Payment Management</a>
+    <a href="?section=reports" class="{% if section == 'reports' %}active{% endif %}">8. Reports & Analytics</a>
+    <a href="?section=qr" class="{% if section == 'qr' %}active{% endif %}">9. QR Management</a>
+  </aside>
 
-<div class="grid" style="margin-top:16px;">
-  <div class="card">
-    <h3>Add Staff/Kitchen User</h3>
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="create_staff">
-      {{ staff_form.as_p }}
-      <button type="submit">Create User</button>
-    </form>
-  </div>
+  <section class="admin-main">
+    {% if section == 'overview' %}
+      <div class="panel">
+        <h2>Dashboard Overview</h2>
+        <p class="muted-small">Quick restaurant statistics for today.</p>
+        <div class="kpi">
+          <div class="box"><strong>Total Orders Today</strong><p>{{ today_stats.total_orders_today }}</p></div>
+          <div class="box"><strong>Total Revenue Today</strong><p>{{ today_stats.total_revenue_today }}</p></div>
+          <div class="box"><strong>Total Customers</strong><p>{{ today_stats.total_customers }}</p></div>
+          <div class="box"><strong>Active Tables</strong><p>{{ today_stats.active_tables }}</p></div>
+          <div class="box"><strong>Pending Orders</strong><p>{{ today_stats.pending_orders }}</p></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Popular Food Items</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Total Qty Sold</th></tr></thead>
+          <tbody>
+            {% for row in popular_items %}
+              <tr><td>{{ row.menu_item__name }}</td><td>{{ row.total_qty }}</td></tr>
+            {% empty %}
+              <tr><td colspan="2">No item sales yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-  <div class="card">
-    <h3>Generate Tables + QR</h3>
-    <p class="muted">If count is 5, system ensures tables 1..5 exist.</p>
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="generate_tables">
-      {{ table_form.as_p }}
-      <button type="submit">Generate Tables</button>
-    </form>
-  </div>
-</div>
+    {% if section == 'menus' %}
+      <div class="panel">
+        <h2>Menu Management</h2>
+        <p class="muted-small">Add/edit/delete menu items, image, price, description, availability.</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_item">
+          {{ item_form.as_p }}
+          <button type="submit">Add New Food Item</button>
+        </form>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Item</th><th>Details</th><th>Actions</th></tr></thead>
+          <tbody>
+          {% for item in menu_items %}
+            <tr>
+              <td>
+                <strong>{{ item.name }}</strong><br>
+                <span class="muted-small">{{ item.restaurant.name }} / {{ item.category.name }}</span>
+              </td>
+              <td>
+                <div>Price: {{ item.price }}</div>
+                <div>Description: {{ item.description|default:'-' }}</div>
+                <div>Image: {% if item.image_url %}<a href="{{ item.image_url }}" target="_blank">View</a>{% else %}-{% endif %}</div>
+                <div>Status: <span class="badge">{% if item.available %}Enabled{% else %}Disabled{% endif %}</span></div>
+              </td>
+              <td class="actions">
+                <form method="post" class="row-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="toggle_item_availability">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit">Enable/Disable</button>
+                </form>
+                <form method="post" class="row-form" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_item">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button type="submit">Delete</button>
+                </form>
+                <form method="post" class="row-form" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update_item">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <input name="name" value="{{ item.name }}" placeholder="Name">
+                  <input name="price" value="{{ item.price }}" placeholder="Price">
+                  <input name="image_url" value="{{ item.image_url }}" placeholder="Image URL">
+                  <input name="description" value="{{ item.description }}" placeholder="Description">
+                  <label><input type="checkbox" name="available" {% if item.available %}checked{% endif %}>Enabled</label>
+                  <button type="submit">Save</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="3">No menu items.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-<div class="grid" style="margin-top:16px;">
-  <div class="card">
-    <h3>Add Menu Category</h3>
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="create_category">
-      {{ category_form.as_p }}
-      <button type="submit">Add Category</button>
-    </form>
-  </div>
+    {% if section == 'categories' %}
+      <div class="panel">
+        <h2>Category Management</h2>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_category">
+          {{ category_form.as_p }}
+          <button type="submit">Add Category</button>
+        </form>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Restaurant</th><th>Category</th><th>Order</th><th>Actions</th></tr></thead>
+          <tbody>
+          {% for c in categories %}
+            <tr>
+              <td>{{ c.restaurant.name }}</td>
+              <td>{{ c.name }}</td>
+              <td>{{ c.display_order }}</td>
+              <td>
+                <form method="post" class="row-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update_category">
+                  <input type="hidden" name="category_id" value="{{ c.id }}">
+                  <input name="name" value="{{ c.name }}">
+                  <input name="display_order" value="{{ c.display_order }}" style="width:80px;">
+                  <button type="submit">Edit</button>
+                </form>
+                <form method="post" class="row-form" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_category">
+                  <input type="hidden" name="category_id" value="{{ c.id }}">
+                  <button type="submit">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="4">No categories found.</td></tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-  <div class="card">
-    <h3>Add Menu Item</h3>
-    <form method="post">
-      {% csrf_token %}
-      <input type="hidden" name="action" value="create_item">
-      {{ item_form.as_p }}
-      <button type="submit">Add Item</button>
-    </form>
-  </div>
-</div>
+    {% if section == 'tables' %}
+      <div class="panel">
+        <h2>Table Management</h2>
+        <p class="muted-small">Add/edit tables, status (available/occupied/reserved), generate QR.</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="generate_tables">
+          {{ table_form.as_p }}
+          <button type="submit">Generate Table Range</button>
+        </form>
+        <hr>
+        <form method="post" class="row-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_table">
+          <select name="restaurant_id">
+            {% for r in restaurants %}<option value="{{ r.id }}">{{ r.name }}</option>{% endfor %}
+          </select>
+          <input name="table_number" type="number" min="1" placeholder="Table number">
+          <button type="submit">Add Table</button>
+        </form>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Restaurant</th><th>Table</th><th>Status</th><th>QR</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for t in tables %}
+              <tr>
+                <td>{{ t.restaurant.name }}</td>
+                <td>{{ t.table_number }}</td>
+                <td>{{ t.status }}</td>
+                <td>{% if t.qr_enabled %}Enabled{% else %}Disabled{% endif %}</td>
+                <td>
+                  <form method="post" class="row-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_table">
+                    <input type="hidden" name="table_id" value="{{ t.id }}">
+                    <input type="number" name="table_number" value="{{ t.table_number }}" style="width:80px;">
+                    <select name="status">
+                      {% for value,label in table_status_choices %}
+                        <option value="{{ value }}" {% if t.status == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <label><input type="checkbox" name="qr_enabled" {% if t.qr_enabled %}checked{% endif %}>QR</label>
+                    <label><input type="checkbox" name="is_active" {% if t.is_active %}checked{% endif %}>Active</label>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5">No tables.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-<div class="card" style="margin-top:16px;">
-  <h3>Staff Users</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Username</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Email</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Groups</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user in staff_users %}
-      <tr>
-        <td>{{ user.username }}</td>
-        <td>{{ user.email }}</td>
-        <td>{% for g in user.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
+    {% if section == 'staff' %}
+      <div class="panel">
+        <h2>Staff Management</h2>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="create_staff">
+          {{ staff_form.as_p }}
+          <button type="submit">Add Staff Account</button>
+        </form>
+        {% if new_user_credentials %}
+          <p><strong>New Credentials:</strong> {{ new_user_credentials.username }} / {{ new_user_credentials.password }} ({{ new_user_credentials.role }})</p>
+        {% endif %}
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for u in staff_users %}
+            <tr>
+              <td>{{ u.username }} ({{ u.get_full_name|default:'-' }})</td>
+              <td>{{ u.email }}</td>
+              <td>{% for g in u.groups.all %}{{ g.name }}{% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</td>
+              <td>
+                <form method="post" class="row-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="update_staff_role">
+                  <input type="hidden" name="user_id" value="{{ u.id }}">
+                  <select name="role">
+                    <option value="manager">Manager</option>
+                    <option value="cashier">Cashier</option>
+                    <option value="kitchen">Kitchen staff</option>
+                    <option value="waiter">Waiter</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button type="submit">Assign Role</button>
+                </form>
+                <form method="post" class="row-form" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reset_staff_password">
+                  <input type="hidden" name="user_id" value="{{ u.id }}">
+                  <input name="new_password" placeholder="New password">
+                  <button type="submit">Set Credentials</button>
+                </form>
+                <form method="post" class="row-form" style="margin-top:6px;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_staff">
+                  <input type="hidden" name="user_id" value="{{ u.id }}">
+                  <button type="submit">Remove Staff</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+              <tr><td colspan="4">No staff accounts.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-<div class="card" style="margin-top:16px;">
-  <h3>Menus</h3>
-  <p><strong>Categories</strong></p>
-  <ul>
-    {% for category in categories %}
-      <li>{{ category.restaurant.name }} / {{ category.name }} (order {{ category.display_order }})</li>
-    {% empty %}
-      <li>No categories.</li>
-    {% endfor %}
-  </ul>
-  <p><strong>Items</strong></p>
-  <ul>
-    {% for item in menu_items %}
-      <li>{{ item.restaurant.name }} / {{ item.category.name }} / {{ item.name }} - {{ item.price }} {% if not item.available %}(Unavailable){% endif %}</li>
-    {% empty %}
-      <li>No menu items.</li>
-    {% endfor %}
-  </ul>
-</div>
+    {% if section == 'orders' %}
+      <div class="panel">
+        <h2>Order Management</h2>
+        <p class="muted-small">Track all orders and table sessions.</p>
+      </div>
+      <div class="panel">
+        <h3>Table Order Sessions</h3>
+        <table>
+          <thead><tr><th>Order ID</th><th>Table</th><th>Status</th><th>Total</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for s in order_sessions %}
+            <tr>
+              <td>#{{ s.id }}</td>
+              <td>{{ s.table.table_number }}</td>
+              <td>{{ s.status }}</td>
+              <td>{{ s.total_amount }}</td>
+              <td>
+                {% if s.status != 'closed' and s.status != 'cancelled' %}
+                <form method="post" class="row-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="cancel_order">
+                  <input type="hidden" name="session_id" value="{{ s.id }}">
+                  <button type="submit">Cancel</button>
+                </form>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+              <tr><td colspan="5">No orders.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Order Items Tracker</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Table</th><th>Status</th><th>Update</th></tr></thead>
+          <tbody>
+            {% for item in order_items %}
+              <tr>
+                <td>{{ item.menu_item.name }} x {{ item.quantity }}</td>
+                <td>{{ item.session.table.table_number }}</td>
+                <td>{{ item.status }}</td>
+                <td>
+                  <form method="post" class="row-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_order_status">
+                    <input type="hidden" name="order_item_id" value="{{ item.id }}">
+                    <select name="status">
+                      <option value="ordered">New</option>
+                      <option value="preparing">Preparing</option>
+                      <option value="ready">Ready</option>
+                      <option value="served">Completed</option>
+                    </select>
+                    <button type="submit">Save</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4">No order items.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
 
-<div class="card" style="margin-top:16px;">
-  <h3>Tables and QR</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Restaurant</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Table</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">Status</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">PIN</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb;">QR</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for t in tables %}
-      <tr>
-        <td>{{ t.restaurant }}</td>
-        <td>{{ t.table_number }}</td>
-        <td>{{ t.status }}</td>
-        <td>{{ t.pin }}</td>
-        <td>
-          <a href="{{ t.scan_path }}" target="_blank">Scan URL</a> |
-          <a href="{{ t.qr_svg_path }}" target="_blank">QR SVG</a>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5">No tables.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    {% if section == 'payments' %}
+      <div class="panel">
+        <h2>Payment Management</h2>
+        <p class="muted-small">Methods: Cash / UPI / Card. Status: Paid / Pending.</p>
+      </div>
+      <div class="panel">
+        <h3>Pending Payment Sessions</h3>
+        <table>
+          <thead><tr><th>Session</th><th>Table</th><th>Total</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for s in payment_pending_sessions %}
+            <tr><td>#{{ s.id }}</td><td>{{ s.table.table_number }}</td><td>{{ s.total_amount }}</td><td>Pending</td></tr>
+            {% empty %}<tr><td colspan="4">No pending payments.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Payment Records</h3>
+        <table>
+          <thead><tr><th>ID</th><th>Session</th><th>Method</th><th>Amount</th><th>Status</th><th>Time</th></tr></thead>
+          <tbody>
+            {% for p in payment_records %}
+            <tr>
+              <td><a href="{% url 'dashboard:payment-detail' p.id %}">#{{ p.id }}</a></td>
+              <td>{{ p.session_id }}</td>
+              <td>{{ p.method }}</td>
+              <td>{{ p.amount }}</td>
+              <td>{{ p.status }}</td>
+              <td>{{ p.created_at }}</td>
+            </tr>
+            {% empty %}
+              <tr><td colspan="6">No payment records.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if section == 'reports' %}
+      <div class="panel">
+        <h2>Reports & Analytics</h2>
+        <form method="get" class="row-form">
+          <input type="hidden" name="section" value="reports">
+          <select name="report_type">
+            <option value="daily" {% if report_type == 'daily' %}selected{% endif %}>Daily</option>
+            <option value="weekly" {% if report_type == 'weekly' %}selected{% endif %}>Weekly</option>
+            <option value="monthly" {% if report_type == 'monthly' %}selected{% endif %}>Monthly</option>
+          </select>
+          <button type="submit">Load Report</button>
+          <a href="{% url 'dashboard:report-export-csv' %}?report_type={{ report_type }}">Download Excel (CSV)</a>
+          <a href="{% url 'dashboard:report-export-pdf' %}?report_type={{ report_type }}">Download PDF</a>
+        </form>
+        <p class="muted-small">Window: {{ report_start }} to {{ report_end }}</p>
+      </div>
+      <div class="panel">
+        <div class="kpi">
+          <div class="box"><strong>Total Revenue</strong><p>{{ report_total }}</p></div>
+          <div class="box"><strong>Peak Hours</strong>
+            <p>{% for h in report_peak_hours %}{{ h.hour }}:00 ({{ h.cnt }}){% if not forloop.last %}, {% endif %}{% empty %}-{% endfor %}</p>
+          </div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Most Selling Food Items</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Qty</th></tr></thead>
+          <tbody>{% for r in report_most_selling %}<tr><td>{{ r.menu_item__name }}</td><td>{{ r.total_qty }}</td></tr>{% empty %}<tr><td colspan="2">No data.</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+      <div class="panel">
+        <h3>Sales by Day</h3>
+        <table>
+          <thead><tr><th>Date</th><th>Revenue</th></tr></thead>
+          <tbody>{% for d in report_daily_series %}<tr><td>{{ d.day }}</td><td>{{ d.total }}</td></tr>{% empty %}<tr><td colspan="2">No data.</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    {% if section == 'qr' %}
+      <div class="panel">
+        <h2>QR Code Management</h2>
+        <p class="muted-small">Generate/download/disable QR and track QR orders.</p>
+      </div>
+      <div class="panel">
+        <table>
+          <thead><tr><th>Restaurant</th><th>Table</th><th>QR Status</th><th>QR Orders</th><th>Actions</th></tr></thead>
+          <tbody>
+            {% for t in qr_tables %}
+              <tr>
+                <td>{{ t.restaurant.name }}</td>
+                <td>{{ t.table_number }}</td>
+                <td>{% if t.qr_enabled %}Enabled{% else %}Disabled{% endif %}</td>
+                <td>{{ t.qr_orders }}</td>
+                <td>
+                  <a href="{% url 'tables_web:table-qr-svg' t.restaurant.slug t.table_number t.qr_token %}" target="_blank">Download QR</a>
+                  <a href="{% url 'core:scan-order' t.restaurant.slug t.table_number t.qr_token %}" target="_blank">Open QR URL</a>
+                  <form method="post" class="row-form" style="margin-top:6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_table">
+                    <input type="hidden" name="table_id" value="{{ t.id }}">
+                    <input type="hidden" name="table_number" value="{{ t.table_number }}">
+                    <input type="hidden" name="status" value="{{ t.status }}">
+                    <input type="hidden" name="is_active" value="{% if t.is_active %}on{% endif %}">
+                    <label><input type="checkbox" name="qr_enabled" {% if t.qr_enabled %}checked{% endif %}>QR Enabled</label>
+                    <button type="submit">Save</button>
+                  </form>
+                  <form method="post" class="row-form" style="margin-top:6px;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="regenerate_qr">
+                    <input type="hidden" name="table_id" value="{{ t.id }}">
+                    <button type="submit">Regenerate QR</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5">No tables found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
 </div>
 {% endblock %}

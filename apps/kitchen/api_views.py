@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db.models import Count
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -25,6 +26,7 @@ class KitchenQueueAPIView(APIView):
                 'id': item.id,
                 'session_id': item.session_id,
                 'session_status': item.session.status,
+                'customer_name': item.session.customer_name or 'Guest',
                 'table_number': item.session.table.table_number,
                 'menu_item': item.menu_item.name,
                 'quantity': item.quantity,
@@ -56,14 +58,18 @@ class KitchenPendingConfirmationsAPIView(APIView):
     permission_classes = [IsStaffUser]
 
     def get(self, request):
-        sessions = OrderSession.objects.select_related('table', 'table__restaurant').filter(
-            status=OrderSession.Status.PENDING_CONFIRMATION
+        sessions = (
+            OrderSession.objects.select_related('table', 'table__restaurant')
+            .filter(status=OrderSession.Status.PENDING_CONFIRMATION)
+            .annotate(item_count=Count('items'))
+            .filter(item_count__gt=0)
         )
         data = [
             {
                 'session_id': session.id,
                 'restaurant': session.table.restaurant.name,
                 'table_number': session.table.table_number,
+                'customer_name': session.customer_name or 'Guest',
                 'created_at': session.created_at,
                 'total_amount': session.total_amount,
             }

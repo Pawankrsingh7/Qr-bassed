@@ -1,17 +1,46 @@
 {% extends "base.html" %}
 {% block title %}Table {{ table_number }} Menu{% endblock %}
 {% block content %}
-<h1>Table {{ table_number }}</h1>
-<p>{{ message }}</p>
-<div id="status" class="card" style="margin-bottom: 16px;">Initializing session...</div>
+<style>
+  .customer-wrap { display:grid; gap:14px; }
+  .status-pill { display:inline-block; border-radius:999px; padding:4px 10px; font-size:12px; background:#eef2ff; }
+  .menu-grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
+  .menu-item { border-top:1px solid #e5e7eb; padding:10px 0; display:grid; grid-template-columns: 64px 1fr auto; gap:10px; align-items:start; }
+  .menu-item img { width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid #e5e7eb; }
+  .menu-item .fallback { width:64px; height:64px; border-radius:10px; display:flex; align-items:center; justify-content:center; border:1px solid #e5e7eb; color:#64748b; font-size:12px; }
+  .muted-small { color:#64748b; font-size:13px; }
+  .out { color:#b91c1c; font-weight:700; font-size:12px; }
+</style>
 
-<div class="grid" id="menu-root"></div>
+<div class="customer-wrap">
+  <h1>Table {{ table_number }}</h1>
+  <p>{{ message }}</p>
 
-<div class="card" style="margin-top: 16px;">
-  <h3>Cart</h3>
-  <div id="cart-list" class="muted">No items selected.</div>
-  <button id="place-order-btn" type="button" style="margin-top: 12px;">Place Order</button>
-  <button id="request-bill-btn" type="button" style="margin-top: 12px; margin-left: 8px;">Request Bill</button>
+  <div class="card">
+    <label for="customer-name"><strong>Customer Name (optional):</strong></label>
+    <input id="customer-name" type="text" placeholder="Enter your name" style="margin-left:8px;" />
+  </div>
+
+  <div id="status" class="card">Initializing session...</div>
+
+  <div class="card">
+    <h3>Live Session</h3>
+    <div id="session-meta" class="muted-small">Waiting...</div>
+  </div>
+
+  <div class="card">
+    <h3>Running Bill</h3>
+    <div id="running-bill" class="muted">No confirmed order items yet.</div>
+  </div>
+
+  <div class="menu-grid" id="menu-root"></div>
+
+  <div class="card">
+    <h3>Cart</h3>
+    <div id="cart-list" class="muted">No items selected.</div>
+    <button id="place-order-btn" type="button" style="margin-top:12px;">Place Order</button>
+    <button id="request-bill-btn" type="button" style="margin-top:12px; margin-left:8px;">Request Bill</button>
+  </div>
 </div>
 
 <script>
@@ -26,11 +55,35 @@
   };
 
   const statusEl = document.getElementById('status');
+  const sessionMetaEl = document.getElementById('session-meta');
+  const runningBillEl = document.getElementById('running-bill');
   const cartEl = document.getElementById('cart-list');
   const menuRoot = document.getElementById('menu-root');
+  const placeOrderBtn = document.getElementById('place-order-btn');
+  const requestBillBtn = document.getElementById('request-bill-btn');
+  const customerNameInput = document.getElementById('customer-name');
+  const storageKey = `session:${restaurantSlug}:${tableNumber}:${qrToken}`;
+
+  function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+  }
+
+  function jsonHeaders() {
+    const headers = { 'Content-Type': 'application/json' };
+    const csrfToken = getCookie('csrftoken');
+    if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+    return headers;
+  }
 
   function setStatus(message) {
     statusEl.textContent = message;
+  }
+
+  function statusBadge(label) {
+    return `<span class="status-pill">${label}</span>`;
   }
 
   function renderMenu() {
@@ -43,11 +96,22 @@
     for (const category of menuPayload) {
       let itemsHtml = '';
       for (const item of category.items) {
+        const imageBlock = item.image_url
+          ? `<img src="${item.image_url}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none;">No image</div>`
+          : '<div class="fallback">No image</div>';
+
+        const availability = item.available
+          ? `<button type="button" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}" class="add-item-btn">Add</button>`
+          : '<span class="out">Out of stock</span>';
+
         itemsHtml += `
-          <div style="border-top:1px solid #e5e7eb; padding:8px 0;">
-            <div><strong>${item.name}</strong> - Rs. ${item.price}</div>
-            <div class="muted">${item.description || ''}</div>
-            <button type="button" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}" class="add-item-btn">Add</button>
+          <div class="menu-item">
+            <div>${imageBlock}</div>
+            <div>
+              <div><strong>${item.name}</strong> - Rs. ${item.price}</div>
+              <div class="muted-small">${item.description || ''}</div>
+            </div>
+            <div>${availability}</div>
           </div>
         `;
       }
@@ -74,17 +138,64 @@
       return;
     }
     const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-    cartEl.innerHTML = items.map((i) => `${i.name} x ${i.qty} = Rs. ${(i.qty * i.price).toFixed(2)}`).join('<br>') + `<hr>Total: Rs. ${total.toFixed(2)}`;
+    cartEl.innerHTML = items.map((i) => `${i.name} x ${i.qty} = Rs. ${(i.qty * i.price).toFixed(2)}`).join('<br>') + `<hr>Cart Total: Rs. ${total.toFixed(2)}`;
+  }
+
+  function renderRunningBill(session) {
+    if (!session || !session.items || !session.items.length) {
+      runningBillEl.textContent = 'No confirmed order items yet.';
+      return;
+    }
+
+    const lines = session.items.map((item) => {
+      const lineTotal = Number(item.price) * Number(item.quantity);
+      return `${item.menu_item_name} x ${item.quantity} = Rs. ${lineTotal.toFixed(2)} ${statusBadge(item.status)}`;
+    });
+    lines.push(`<hr><strong>Total Spent: Rs. ${Number(session.total_amount).toFixed(2)}</strong>`);
+    runningBillEl.innerHTML = lines.join('<br>');
+  }
+
+  function renderSessionMeta(session) {
+    if (!session) {
+      sessionMetaEl.textContent = 'No active session.';
+      return;
+    }
+    const payment = session.payment_status || 'pending';
+    sessionMetaEl.innerHTML = `Session #${session.id} ${statusBadge(session.status)} | Payment ${statusBadge(payment)} | Running Total: Rs. ${Number(session.total_amount).toFixed(2)}`;
+  }
+
+  function saveSessionId(sessionId) {
+    localStorage.setItem(storageKey, String(sessionId));
+  }
+
+  function clearSessionId() {
+    localStorage.removeItem(storageKey);
+  }
+
+  async function fetchSessionDetail(sessionId) {
+    const response = await fetch(`/api/customer/sessions/${sessionId}/`);
+    if (!response.ok) {
+      throw new Error('Unable to fetch session details.');
+    }
+    return await response.json();
+  }
+
+  async function fetchOpenSession() {
+    const response = await fetch(`/api/customer/sessions/open/?restaurant_slug=${encodeURIComponent(restaurantSlug)}&table_number=${tableNumber}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.session || null;
   }
 
   async function bootstrapSession() {
     const response = await fetch('/api/customer/sessions/bootstrap/', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders(),
       body: JSON.stringify({
         restaurant_slug: restaurantSlug,
         table_number: tableNumber,
         qr_token: qrToken,
+        customer_name: customerNameInput.value.trim(),
       }),
     });
     const data = await response.json();
@@ -92,10 +203,56 @@
       throw new Error(data.detail || 'Unable to start session');
     }
     state.sessionId = data.session.id;
+    saveSessionId(state.sessionId);
+    placeOrderBtn.disabled = false;
+    requestBillBtn.disabled = false;
+    renderRunningBill(data.session);
+    renderSessionMeta(data.session);
     setStatus(`Session #${state.sessionId} ready. Start ordering.`);
   }
 
+  async function ensureSession() {
+    const saved = localStorage.getItem(storageKey);
+    if (saved) {
+      try {
+        const session = await fetchSessionDetail(saved);
+        if (['closed', 'cancelled'].includes(session.status)) {
+          clearSessionId();
+        } else {
+          state.sessionId = session.id;
+          placeOrderBtn.disabled = false;
+          requestBillBtn.disabled = false;
+          renderRunningBill(session);
+          renderSessionMeta(session);
+          setStatus(`Session #${state.sessionId} restored. Status: ${session.status}.`);
+          return;
+        }
+      } catch (e) {
+        clearSessionId();
+      }
+    }
+
+    const openSession = await fetchOpenSession();
+    if (openSession) {
+      state.sessionId = openSession.id;
+      saveSessionId(state.sessionId);
+      placeOrderBtn.disabled = false;
+      requestBillBtn.disabled = false;
+      renderRunningBill(openSession);
+      renderSessionMeta(openSession);
+      setStatus(`Session #${state.sessionId} restored. Status: ${openSession.status}.`);
+      return;
+    }
+
+    await bootstrapSession();
+  }
+
   async function placeOrder() {
+    if (!state.sessionId) {
+      setStatus('Session is not ready yet. Please wait a moment and try again.');
+      return;
+    }
+
     const items = Object.values(state.cart).filter((x) => x.qty > 0).map((x) => ({ menu_item_id: x.id, quantity: x.qty }));
     if (!items.length) {
       setStatus('Add at least one item to place order.');
@@ -104,7 +261,7 @@
 
     const response = await fetch(`/api/customer/sessions/${state.sessionId}/items/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders(),
       body: JSON.stringify({ items }),
     });
     const data = await response.json();
@@ -114,28 +271,57 @@
     }
 
     setStatus(data.message + ` Bill total: Rs. ${data.session.total_amount}`);
+    renderRunningBill(data.session);
+    renderSessionMeta(data.session);
     state.cart = {};
     renderCart();
   }
 
   async function requestBill() {
+    if (!state.sessionId) {
+      setStatus('Session is not ready yet. Please wait a moment and try again.');
+      return;
+    }
+
     const response = await fetch(`/api/customer/sessions/${state.sessionId}/request-bill/`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: jsonHeaders(),
     });
     const data = await response.json();
     if (!response.ok) {
       setStatus(data.detail || 'Failed to request bill.');
       return;
     }
-    setStatus(data.message + ' Please wait for staff.');
+    renderRunningBill(data.session);
+    renderSessionMeta(data.session);
+    setStatus(data.message + ' Please wait for cashier/waiter.');
   }
 
-  document.getElementById('place-order-btn').addEventListener('click', placeOrder);
-  document.getElementById('request-bill-btn').addEventListener('click', requestBill);
+  async function refreshSessionStatus() {
+    if (!state.sessionId) return;
+    try {
+      const session = await fetchSessionDetail(state.sessionId);
+      renderRunningBill(session);
+      renderSessionMeta(session);
+      if (['closed', 'cancelled'].includes(session.status)) {
+        clearSessionId();
+        setStatus(`Session ${session.status}. Please start a new session for new orders.`);
+        placeOrderBtn.disabled = true;
+        requestBillBtn.disabled = true;
+      }
+    } catch (e) {
+      // ignore transient polling errors
+    }
+  }
+
+  placeOrderBtn.disabled = true;
+  requestBillBtn.disabled = true;
+  placeOrderBtn.addEventListener('click', placeOrder);
+  requestBillBtn.addEventListener('click', requestBill);
 
   renderMenu();
   renderCart();
-  bootstrapSession().catch((err) => setStatus(err.message));
+  ensureSession().catch((err) => setStatus(err.message));
+  setInterval(refreshSessionStatus, 5000);
 </script>
 {% endblock %}

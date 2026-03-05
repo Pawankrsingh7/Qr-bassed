@@ -13,6 +13,7 @@ class SessionBootstrapSerializer(serializers.Serializer):
     table_number = serializers.IntegerField(min_value=1)
     verification_pin = serializers.CharField(max_length=4, required=False, allow_blank=True)
     qr_token = serializers.CharField(max_length=64, required=False, allow_blank=True)
+    customer_name = serializers.CharField(max_length=120, required=False, allow_blank=True)
     force_new_session = serializers.BooleanField(default=False)
 
 
@@ -33,6 +34,7 @@ class OrderSessionSerializer(serializers.ModelSerializer):
         fields = (
             'id',
             'table_number',
+            'customer_name',
             'status',
             'payment_status',
             'total_amount',

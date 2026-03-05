@@ -48,6 +48,7 @@ def table_qr_svg(request, restaurant_slug: str, table_number: int, qr_token: str
         table_number=table_number,
         qr_token=qr_token,
         is_active=True,
+        qr_enabled=True,
     )
 
     import qrcode

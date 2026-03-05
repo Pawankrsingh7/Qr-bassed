@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block title %}Waiter Dashboard{% endblock %}
+{% block content %}
+<h1>Waiter Dashboard</h1>
+<p class="muted">Approve first customer orders and send them to kitchen flow.</p>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="card" style="border-left:4px solid #2563eb; margin-bottom:12px;">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Pending Table Confirmations</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Restaurant</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Created</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for session in pending_sessions %}
+      <tr>
+        <td style="padding:8px;">#{{ session.id }}</td>
+        <td style="padding:8px;">{{ session.table.restaurant.name }}</td>
+        <td style="padding:8px;">{{ session.table.table_number }}</td>
+        <td style="padding:8px;">{{ session.created_at }}</td>
+        <td style="padding:8px;">
+          <form method="post" style="margin:0; display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="approve_session">
+            <input type="hidden" name="session_id" value="{{ session.id }}">
+            <button type="submit">Approve Order</button>
+          </form>
+          <form method="post" style="margin:0; display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reject_session">
+            <input type="hidden" name="session_id" value="{{ session.id }}">
+            <button type="submit">Reject</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" style="padding:8px;">No pending confirmations.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card" style="margin-bottom:16px;">
+  <h3>Ready Items Notification (From Kitchen)</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Customer</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Item</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Qty</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in ready_items %}
+      <tr>
+        <td style="padding:8px;">#{{ item.session.id }}</td>
+        <td style="padding:8px;">{{ item.session.customer_name|default:"Guest" }}</td>
+        <td style="padding:8px;">{{ item.session.table.table_number }}</td>
+        <td style="padding:8px;">{{ item.menu_item.name }}</td>
+        <td style="padding:8px;">{{ item.quantity }}</td>
+        <td style="padding:8px;">
+          <form method="post" style="margin:0;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_served">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <button type="submit">Mark Served</button>
+          </form>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="6" style="padding:8px;">No ready notifications.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Quick Links</h3>
+  <p><a href="/api/customer/sessions/pending-confirmations/">Pending Confirmations API</a></p>
+  <p><a href="/api/dashboard/tables/status/">Table Status API</a></p>
+</div>
+<script>
+  setTimeout(function () {
+    window.location.reload();
+  }, 5000);
+</script>
+{% endblock %}

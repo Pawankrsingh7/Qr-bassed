@@ -26,7 +26,7 @@ class CashPaymentAPIView(APIView):
 
         return Response(
             {
-                'message': 'Cash payment recorded and session closed.',
+                'message': f'Cash payment recorded. Table will be auto-freed in {session.release_after_minutes} minutes.',
                 'payment_id': payment.id,
                 'session_id': session.id,
                 'session_status': session.status,

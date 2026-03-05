@@ -22,6 +22,7 @@ class OrderSession(models.Model):
         PAID = 'paid', 'Paid'
 
     table = models.ForeignKey(Table, on_delete=models.PROTECT, related_name='sessions')
+    customer_name = models.CharField(max_length=120, blank=True, default='')
     status = models.CharField(max_length=32, choices=Status.choices, default=Status.PENDING_CONFIRMATION)
     payment_status = models.CharField(max_length=16, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
@@ -29,6 +30,8 @@ class OrderSession(models.Model):
         'auth.User', null=True, blank=True, on_delete=models.SET_NULL, related_name='confirmed_sessions'
     )
     confirmed_at = models.DateTimeField(null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    release_after_minutes = models.PositiveSmallIntegerField(default=5)
     created_at = models.DateTimeField(auto_now_add=True)
     closed_at = models.DateTimeField(null=True, blank=True)
 
@@ -54,13 +57,26 @@ class OrderSession(models.Model):
         self.table.save(update_fields=['status'])
         self.save(update_fields=['status', 'confirmed_by', 'confirmed_at'])
 
-    def close_as_paid(self):
+    def close_as_paid(self, release_after_minutes: int = 5):
         self.payment_status = self.PaymentStatus.PAID
+        self.status = self.Status.PAID
+        self.paid_at = timezone.now()
+        self.release_after_minutes = release_after_minutes
+        self.table.status = Table.Status.PAID
+        self.table.save(update_fields=['status'])
+        self.save(update_fields=['payment_status', 'status', 'paid_at', 'release_after_minutes'])
+
+    def release_if_due(self) -> bool:
+        if self.status != self.Status.PAID or not self.paid_at:
+            return False
+        if timezone.now() < self.paid_at + timezone.timedelta(minutes=self.release_after_minutes):
+            return False
         self.status = self.Status.CLOSED
         self.closed_at = timezone.now()
         self.table.status = Table.Status.FREE
         self.table.save(update_fields=['status'])
-        self.save(update_fields=['payment_status', 'status', 'closed_at'])
+        self.save(update_fields=['status', 'closed_at'])
+        return True
 
     def recalculate_total(self):
         total = self.items.aggregate(total=Sum(models.F('price') * models.F('quantity')))['total']

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Payment Detail{% endblock %}
+{% block content %}
+<h1>Payment Detail</h1>
+<p><a href="{% url 'dashboard:overview' %}?section=revenue">Back to Revenue</a></p>
+<div class="card">
+  <p><strong>Payment ID:</strong> {{ payment.id }}</p>
+  <p><strong>Method:</strong> {{ payment.method }}</p>
+  <p><strong>Amount:</strong> {{ payment.amount }}</p>
+  <p><strong>Status:</strong> {{ payment.status }}</p>
+  <p><strong>Time:</strong> {{ payment.created_at }}</p>
+  <p><strong>Restaurant:</strong> {{ session.table.restaurant.name }}</p>
+  <p><strong>Table:</strong> {{ session.table.table_number }}</p>
+  <p><strong>Session:</strong> {{ session.id }}</p>
+</div>
+
+<div class="card" style="margin-top:16px;">
+  <h3>Ordered Items</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr><td>{{ item.menu_item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.price }}</td><td>{{ item.status }}</td></tr>
+      {% empty %}
+      <tr><td colspan="4">No items found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

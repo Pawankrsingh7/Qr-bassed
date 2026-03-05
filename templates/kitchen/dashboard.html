@@ -2,6 +2,68 @@
 {% block title %}Kitchen Dashboard{% endblock %}
 {% block content %}
 <h1>Kitchen Dashboard</h1>
-<p class="muted">Use API to fetch queue: <code>GET /api/kitchen/queue/</code></p>
-<p class="muted">Update status: <code>PATCH /api/kitchen/order-items/{item_id}/status/</code></p>
+<p class="muted">Approved orders appear here for preparation.</p>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="card" style="border-left:4px solid #2563eb; margin-bottom:12px;">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="card">
+  <h3>Preparation Queue</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead>
+      <tr>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Customer</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Menu Item</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Qty</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Status</th>
+        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in queue_items %}
+      <tr>
+        <td style="padding:8px;">#{{ item.session.id }}</td>
+        <td style="padding:8px;">{{ item.session.customer_name|default:"Guest" }}</td>
+        <td style="padding:8px;">{{ item.session.table.table_number }}</td>
+        <td style="padding:8px;">{{ item.menu_item.name }}</td>
+        <td style="padding:8px;">{{ item.quantity }}</td>
+        <td style="padding:8px;">{{ item.status }}</td>
+        <td style="padding:8px;">
+          {% if item.status == 'ordered' %}
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_item_status">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input type="hidden" name="next_status" value="preparing">
+            <button type="submit">Start Preparing</button>
+          </form>
+          {% elif item.status == 'preparing' %}
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_item_status">
+            <input type="hidden" name="item_id" value="{{ item.id }}">
+            <input type="hidden" name="next_status" value="ready">
+            <button type="submit">Mark Ready</button>
+          </form>
+          {% else %}
+          Ready for waiter pickup
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" style="padding:8px;">No approved orders in queue.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<script>
+  setTimeout(function () {
+    window.location.reload();
+  }, 5000);
+</script>
 {% endblock %}

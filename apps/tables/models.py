@@ -9,10 +9,12 @@ class Table(models.Model):
         FREE = 'free', 'Free'
         ACTIVE = 'active', 'Active'
         PAID = 'paid', 'Paid'
+        RESERVED = 'reserved', 'Reserved'
 
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, related_name='tables')
     table_number = models.PositiveIntegerField()
     qr_token = models.CharField(max_length=64, unique=True, default=generate_qr_token, editable=False)
+    qr_enabled = models.BooleanField(default=True)
     verification_pin = models.CharField(max_length=4, default=generate_table_pin)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.FREE)
     is_active = models.BooleanField(default=True)

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Print Bill{% endblock %}
+{% block content %}
+<h1>Bill - Session #{{ session.id }}</h1>
+<p><strong>Restaurant:</strong> {{ session.table.restaurant.name }}</p>
+<p><strong>Table:</strong> {{ session.table.table_number }}</p>
+<p><strong>Customer:</strong> {{ session.customer_name|default:"Guest" }}</p>
+<p><strong>Status:</strong> {{ session.status }}</p>
+<p><strong>Created At:</strong> {{ session.created_at }}</p>
+
+<div class="card" style="margin-top:16px;">
+  <h3>Items</h3>
+  <table style="width:100%; border-collapse: collapse;">
+    <thead><tr><th style="text-align:left; border-bottom:1px solid #e5e7eb;">Item</th><th style="text-align:left; border-bottom:1px solid #e5e7eb;">Qty</th><th style="text-align:left; border-bottom:1px solid #e5e7eb;">Price</th></tr></thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ item.menu_item.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.price }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No items.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<h3 style="margin-top:16px;">Total: {{ session.total_amount }}</h3>
+
+<button onclick="window.print()">Print Bill</button>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Cashier Dashboard{% endblock %}
+{% block content %}
+<style>
+  .layout { display:grid; grid-template-columns: 240px 1fr; gap:16px; }
+  .side { background: linear-gradient(180deg,#0ea5e9,#0369a1); border-radius: 12px; padding: 16px; color:#fff; }
+  .side a { display:block; color:#fff; text-decoration:none; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
+  .side a.active { background: rgba(255,255,255,0.2); font-weight:700; }
+  .card2 { border:1px solid #e5e7eb; border-radius:10px; padding:14px; background:#fff; margin-bottom:16px; }
+  table { width:100%; border-collapse: collapse; }
+  th, td { border-bottom:1px solid #e5e7eb; text-align:left; padding:8px; }
+  .grid2 { display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+</style>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="card2" style="border-left:4px solid #0ea5e9;">{{ message }}</div>
+  {% endfor %}
+{% endif %}
+
+<div class="layout">
+  <aside class="side">
+    <h3>Cashier Panel</h3>
+    <a href="?section=billing" class="{% if section == 'billing' %}active{% endif %}">1) Billing System</a>
+    <a href="?section=table_status" class="{% if section == 'table_status' %}active{% endif %}">2) Table Status</a>
+    <a href="?section=daily_sales" class="{% if section == 'daily_sales' %}active{% endif %}">3) Daily Sales Dashboard</a>
+    <a href="?section=order_history" class="{% if section == 'order_history' %}active{% endif %}">4) Order History</a>
+  </aside>
+
+  <section>
+    {% if section == 'billing' %}
+      <div class="card2">
+        <h2>Billing System</h2>
+        <p class="muted">Automatic bill generation, GST/discount/coupon/split and payment marking.</p>
+      </div>
+
+      <div class="card2">
+        <form method="get">
+          <input type="hidden" name="section" value="billing">
+          <label><strong>Select Session:</strong></label>
+          <select name="session_id">
+            {% for s in active_bill_sessions %}
+              <option value="{{ s.id }}" {% if selected_session and s.id == selected_session.id %}selected{% endif %}>#{{ s.id }} | Table {{ s.table.table_number }} | {{ s.customer_name|default:"Guest" }} | {{ s.status }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit">Load Bill</button>
+        </form>
+      </div>
+
+      {% if selected_session %}
+      <div class="card2">
+        <h3>Bill Details - Session #{{ selected_session.id }}</h3>
+        <p><strong>Customer:</strong> {{ selected_session.customer_name|default:"Guest" }} | <strong>Table:</strong> {{ selected_session.table.table_number }}</p>
+
+        <table>
+          <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Line</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for item in bill_items %}
+            <tr>
+              <td>{{ item.menu_item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.price }}</td><td>{{ item.quantity|floatformat:0|add:"0" }} x {{ item.price }}</td>
+              <td>
+                <form method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="remove_item">
+                  <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+                  <input type="hidden" name="order_item_id" value="{{ item.id }}">
+                  <button type="submit">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5">No items in bill.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card2">
+        <h3>Add Item to Bill</h3>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="add_item">
+          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+          <select name="menu_item_id">
+            {% for m in all_available_menu_items %}
+              <option value="{{ m.id }}">{{ m.restaurant.name }} - {{ m.name }} ({{ m.price }})</option>
+            {% endfor %}
+          </select>
+          <input type="number" name="quantity" min="1" value="1">
+          <button type="submit">Add Item</button>
+        </form>
+      </div>
+
+      <div class="card2">
+        <h3>GST / Discount / Coupon / Split</h3>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_billing">
+          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+          <label>GST %</label>
+          <input type="number" step="0.01" name="gst_percent" value="{{ bill_summary.billing.gst_percent }}">
+          <label>Discount Amount</label>
+          <input type="number" step="0.01" name="discount_amount" value="{{ bill_summary.billing.discount_amount }}">
+          <label>Coupon Code</label>
+          <input type="text" name="coupon_code" value="{{ bill_summary.billing.coupon_code }}" placeholder="SAVE10 / FLAT50 / WELCOME">
+          <label>Split Bill Count</label>
+          <input type="number" min="1" name="split_count" value="{{ bill_summary.billing.split_count }}">
+          <button type="submit">Apply</button>
+        </form>
+      </div>
+
+      <div class="card2">
+        <h3>Computed Total</h3>
+        <p>Subtotal: {{ bill_summary.subtotal }}</p>
+        <p>GST: {{ bill_summary.gst_amount }}</p>
+        <p>Discount: {{ bill_summary.discount_amount }}</p>
+        <p>Coupon ({{ bill_summary.coupon_code|default:"-" }}): {{ bill_summary.coupon_discount_amount }}</p>
+        <p><strong>Final Total: {{ bill_summary.final_total }}</strong></p>
+        <p>Split: {{ bill_summary.split_count }} | Per Person: {{ bill_summary.per_person }}</p>
+
+        <p>
+          <a href="/dashboard/sessions/{{ selected_session.id }}/print-bill/" target="_blank">Print Invoice</a> |
+          <a href="/cashier/invoice/{{ selected_session.id }}/pdf/" target="_blank">Download PDF</a>
+        </p>
+
+        {% if selected_session.status == 'payment_requested' %}
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="mark_payment_done">
+          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+          <label>Payment Method</label>
+          <select name="payment_method">
+            <option value="cash">Cash</option>
+            <option value="upi">UPI</option>
+            <option value="card">Card</option>
+          </select>
+          <button type="submit">Mark Payment Done</button>
+        </form>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="card2">No bill-request sessions available.</div>
+      {% endif %}
+
+    {% elif section == 'table_status' %}
+      <div class="card2">
+        <h2>Table Status</h2>
+        <div class="grid2">
+          <div class="card2"><strong>Available</strong><p>{{ table_status.available }}</p></div>
+          <div class="card2"><strong>Occupied</strong><p>{{ table_status.occupied }}</p></div>
+          <div class="card2"><strong>Reserved</strong><p>{{ table_status.reserved }}</p></div>
+        </div>
+      </div>
+      <div class="card2">
+        <h3>Table Orders</h3>
+        <table>
+          <thead><tr><th>Session</th><th>Table</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead>
+          <tbody>
+            {% for s in table_orders %}
+            <tr><td>#{{ s.id }}</td><td>{{ s.table.table_number }}</td><td>{{ s.customer_name|default:"Guest" }}</td><td>{{ s.status }}</td><td>{{ s.total_amount }}</td></tr>
+            {% empty %}<tr><td colspan="5">No table orders.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% elif section == 'daily_sales' %}
+      <div class="card2">
+        <h2>Daily Sales Dashboard</h2>
+        <div class="grid2">
+          <div class="card2"><strong>Total Sales Today</strong><p>{{ total_sales_today }}</p></div>
+          <div class="card2"><strong>Total Orders Today</strong><p>{{ total_orders_today }}</p></div>
+          <div class="card2"><strong>Cash Sales</strong><p>{{ cash_sales }}</p></div>
+          <div class="card2"><strong>Online Sales</strong><p>{{ online_sales }}</p></div>
+          <div class="card2"><strong>Peak Order Time</strong><p>{% if peak_order %}{{ peak_order.hour }}:00{% else %}-{% endif %}</p></div>
+        </div>
+      </div>
+      <div class="card2">
+        <h3>Most Sold Food Items (Today)</h3>
+        <table>
+          <thead><tr><th>Item</th><th>Qty</th></tr></thead>
+          <tbody>
+            {% for row in most_sold_items %}
+            <tr><td>{{ row.menu_item__name }}</td><td>{{ row.total_qty }}</td></tr>
+            {% empty %}<tr><td colspan="2">No sales yet.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% elif section == 'order_history' %}
+      <div class="card2">
+        <h2>Order History</h2>
+        <form method="get">
+          <input type="hidden" name="section" value="order_history">
+          <label>Date</label><input type="date" name="filter_date" value="{{ filter_date }}">
+          <label>Order ID</label><input type="number" name="filter_order_id" value="{{ filter_order_id }}">
+          <label>Table Number</label><input type="number" name="filter_table" value="{{ filter_table }}">
+          <button type="submit">Search</button>
+        </form>
+      </div>
+      <div class="card2">
+        <table>
+          <thead><tr><th>Order ID</th><th>Date</th><th>Table</th><th>Status</th><th>Total</th><th>Invoice</th></tr></thead>
+          <tbody>
+            {% for s in history_qs %}
+            <tr>
+              <td>#{{ s.id }}</td><td>{{ s.created_at }}</td><td>{{ s.table.table_number }}</td><td>{{ s.status }}</td><td>{{ s.total_amount }}</td>
+              <td><a href="/dashboard/sessions/{{ s.id }}/print-bill/" target="_blank">View Invoice</a></td>
+            </tr>
+            {% empty %}<tr><td colspan="6">No orders found.</td></tr>{% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+</div>
+
+<script>
+  setTimeout(function(){ window.location.reload(); }, 5000);
+</script>
+{% endblock %}

@@ -1,6 +1,7 @@
 import json
 
 from django.shortcuts import get_object_or_404, render
+from django.db.models import Count
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -26,6 +27,7 @@ def customer_order_page(request, restaurant_slug: str, table_number: int, qr_tok
         table_number=table_number,
         qr_token=qr_token,
         is_active=True,
+        qr_enabled=True,
     )
     categories = MenuCategory.objects.filter(restaurant=table.restaurant).prefetch_related('items')
     menu_payload = []
@@ -39,10 +41,11 @@ def customer_order_page(request, restaurant_slug: str, table_number: int, qr_tok
                         'id': item.id,
                         'name': item.name,
                         'description': item.description,
+                        'image_url': item.image_url,
                         'price': str(item.price),
+                        'available': item.available,
                     }
                     for item in category.items.all()
-                    if item.available
                 ],
             }
         )
@@ -70,6 +73,8 @@ class SessionBootstrapAPIView(APIView):
             table_number=serializer.validated_data['table_number'],
             is_active=True,
         )
+        if table.status == Table.Status.RESERVED:
+            return Response({'detail': 'This table is currently reserved.'}, status=status.HTTP_403_FORBIDDEN)
 
         provided_pin = serializer.validated_data.get('verification_pin') or ''
         provided_token = serializer.validated_data.get('qr_token') or ''
@@ -87,6 +92,7 @@ class SessionBootstrapAPIView(APIView):
         session = get_or_create_open_session(
             table=table,
             force_new_session=serializer.validated_data['force_new_session'],
+            customer_name=serializer.validated_data.get('customer_name', ''),
         )
 
         return Response(
@@ -203,11 +209,11 @@ class CustomerMenuAPIView(APIView):
                     'id': item.id,
                     'name': item.name,
                     'description': item.description,
+                    'image_url': item.image_url,
                     'price': str(item.price),
                     'available': item.available,
                 }
                 for item in category.items.all()
-                if item.available
             ]
             data.append({'id': category.id, 'name': category.name, 'items': items})
 
@@ -218,14 +224,18 @@ class PendingConfirmationsAPIView(APIView):
     permission_classes = [IsStaffUser]
 
     def get(self, request):
-        pending_sessions = OrderSession.objects.select_related('table', 'table__restaurant').filter(
-            status=OrderSession.Status.PENDING_CONFIRMATION
+        pending_sessions = (
+            OrderSession.objects.select_related('table', 'table__restaurant')
+            .filter(status=OrderSession.Status.PENDING_CONFIRMATION)
+            .annotate(item_count=Count('items'))
+            .filter(item_count__gt=0)
         )
         payload = [
             {
                 'session_id': session.id,
                 'restaurant': session.table.restaurant.name,
                 'table_number': session.table.table_number,
+                'customer_name': session.customer_name or 'Guest',
                 'created_at': session.created_at,
                 'total_amount': session.total_amount,
             }

@@ -10,7 +10,7 @@ from apps.tables.models import Table
 from .models import OrderItem, OrderSession
 
 
-def get_or_create_open_session(table: Table, force_new_session: bool = False) -> OrderSession:
+def get_or_create_open_session(table: Table, force_new_session: bool = False, customer_name: str = '') -> OrderSession:
     open_statuses = [
         OrderSession.Status.PENDING_CONFIRMATION,
         OrderSession.Status.ACTIVE,
@@ -21,6 +21,9 @@ def get_or_create_open_session(table: Table, force_new_session: bool = False) ->
         session = None
 
     if session and not force_new_session:
+        if customer_name and not session.customer_name:
+            session.customer_name = customer_name
+            session.save(update_fields=['customer_name'])
         return session
 
     if session and force_new_session:
@@ -29,11 +32,18 @@ def get_or_create_open_session(table: Table, force_new_session: bool = False) ->
 
     table.status = Table.Status.ACTIVE
     table.save(update_fields=['status'])
-    return OrderSession.objects.create(table=table, status=OrderSession.Status.PENDING_CONFIRMATION)
+    return OrderSession.objects.create(
+        table=table,
+        status=OrderSession.Status.PENDING_CONFIRMATION,
+        customer_name=customer_name or '',
+    )
 
 
 @transaction.atomic
 def add_items_to_session(session: OrderSession, payload_items):
+    if session.status in (OrderSession.Status.CLOSED, OrderSession.Status.CANCELLED):
+        raise serializers.ValidationError('This session is closed. Please start a new session.')
+
     menu_item_map = {
         item.id: item
         for item in MenuItem.objects.filter(
@@ -73,6 +83,19 @@ def confirm_session(session: OrderSession, user=None) -> OrderSession:
 
 
 @transaction.atomic
+def reject_session(session: OrderSession) -> OrderSession:
+    if session.status in (OrderSession.Status.CLOSED, OrderSession.Status.CANCELLED):
+        return session
+
+    session.status = OrderSession.Status.CANCELLED
+    session.closed_at = timezone.now()
+    session.table.status = Table.Status.FREE
+    session.table.save(update_fields=['status'])
+    session.save(update_fields=['status', 'closed_at'])
+    return session
+
+
+@transaction.atomic
 def request_bill(session: OrderSession) -> OrderSession:
     if session.status in (OrderSession.Status.CLOSED, OrderSession.Status.CANCELLED):
         return session
@@ -95,3 +118,13 @@ def auto_cancel_stale_pending(session: OrderSession, timeout_minutes: int = 10) 
     session.table.save(update_fields=['status'])
     session.save(update_fields=['status'])
     return True
+
+
+@transaction.atomic
+def release_due_paid_sessions() -> int:
+    paid_sessions = OrderSession.objects.select_related('table').filter(status=OrderSession.Status.PAID)
+    released_count = 0
+    for session in paid_sessions:
+        if session.release_if_due():
+            released_count += 1
+    return released_count
