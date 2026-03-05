@@ -1,98 +1,414 @@
 {% extends "base.html" %}
 {% block title %}Waiter Dashboard{% endblock %}
 {% block content %}
-<h1>Waiter Dashboard</h1>
-<p class="muted">Approve first customer orders and send them to kitchen flow.</p>
+<style>
+  :root {
+    --bg: #f3f5f8;
+    --panel: #ffffff;
+    --line: #e4e7ec;
+    --text: #101828;
+    --muted: #475467;
+    --header-a: #1f2937;
+    --header-b: #0f172a;
+    --ok: #166534;
+    --ok-dark: #14532d;
+    --danger: #b42318;
+    --danger-dark: #7a271a;
+    --action: #1d4ed8;
+    --action-dark: #1e3a8a;
+    --chip-bg: #eef4ff;
+    --chip-text: #1d4ed8;
+  }
 
-{% if messages %}
-  {% for message in messages %}
-    <div class="card" style="border-left:4px solid #2563eb; margin-bottom:12px;">{{ message }}</div>
-  {% endfor %}
-{% endif %}
+  .container {
+    max-width: 1220px;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 10px;
+    margin-bottom: 20px;
+  }
 
-<div class="card" style="margin-bottom:16px;">
-  <h3>Pending Table Confirmations</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Restaurant</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Created</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for session in pending_sessions %}
-      <tr>
-        <td style="padding:8px;">#{{ session.id }}</td>
-        <td style="padding:8px;">{{ session.table.restaurant.name }}</td>
-        <td style="padding:8px;">{{ session.table.table_number }}</td>
-        <td style="padding:8px;">{{ session.created_at }}</td>
-        <td style="padding:8px;">
-          <form method="post" style="margin:0; display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="approve_session">
-            <input type="hidden" name="session_id" value="{{ session.id }}">
-            <button type="submit">Approve Order</button>
-          </form>
-          <form method="post" style="margin:0; display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="reject_session">
-            <input type="hidden" name="session_id" value="{{ session.id }}">
-            <button type="submit">Reject</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="5" style="padding:8px;">No pending confirmations.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  .waiter-shell {
+    background: var(--bg);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 12px 34px rgba(16, 24, 40, 0.12);
+  }
+
+  .waiter-head {
+    padding: 18px 18px 14px;
+    background: linear-gradient(90deg, var(--header-a), var(--header-b));
+    color: #fff;
+  }
+
+  .waiter-head-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .waiter-title {
+    margin: 0;
+    font-size: 34px;
+    line-height: 1.05;
+    letter-spacing: 0.2px;
+  }
+
+  .waiter-subtitle {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.86);
+    font-size: 14px;
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .quick-actions a {
+    text-decoration: none;
+    color: #fff;
+    font-weight: 700;
+    font-size: 13px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    padding: 8px 11px;
+  }
+
+  .waiter-body {
+    padding: 14px;
+    display: grid;
+    gap: 12px;
+  }
+
+  .flash-wrap {
+    display: grid;
+    gap: 8px;
+  }
+
+  .flash {
+    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #bfd7ff;
+    background: #eef4ff;
+    color: #1e40af;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .summary-grid {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .summary-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+  }
+
+  .summary-label {
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .summary-value {
+    font-size: 36px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 12px 12px 9px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .panel-title {
+    margin: 0;
+    font-size: 26px;
+    line-height: 1.1;
+  }
+
+  .panel-chip {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--chip-text);
+    background: var(--chip-bg);
+    border: 1px solid #cfe0ff;
+    border-radius: 999px;
+    padding: 4px 8px;
+    white-space: nowrap;
+  }
+
+  .panel-body {
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+    max-height: 62vh;
+    overflow: auto;
+  }
+
+  .queue-item {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 12px;
+    background: #fff;
+  }
+
+  .queue-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .session-id {
+    font-size: 14px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .meta {
+    margin: 0;
+    color: #475467;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .meta strong {
+    color: #111827;
+  }
+
+  .actions {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+
+  .actions form {
+    margin: 0;
+  }
+
+  .btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .btn-ok {
+    background: linear-gradient(180deg, var(--ok), var(--ok-dark));
+  }
+
+  .btn-danger {
+    background: linear-gradient(180deg, var(--danger), var(--danger-dark));
+  }
+
+  .btn-action {
+    background: linear-gradient(180deg, var(--action), var(--action-dark));
+  }
+
+  .muted-note {
+    margin: 0;
+    color: #667085;
+    font-size: 13px;
+  }
+
+  .empty-state {
+    border: 1px dashed #d0d5dd;
+    border-radius: 12px;
+    padding: 14px;
+    color: #475467;
+    font-size: 14px;
+    background: #fcfcfd;
+  }
+
+  @media (max-width: 1080px) {
+    .summary-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 680px) {
+    .container {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+    .waiter-shell {
+      border-radius: 0;
+      min-height: 100dvh;
+    }
+    .waiter-head {
+      padding: 14px 12px;
+    }
+    .waiter-title {
+      font-size: 29px;
+    }
+    .waiter-body {
+      padding: 10px;
+    }
+    .summary-grid {
+      grid-template-columns: 1fr;
+    }
+    .panel-title {
+      font-size: 22px;
+    }
+    .panel-body {
+      max-height: none;
+    }
+  }
+</style>
+
+<div class="waiter-shell">
+  <section class="waiter-head">
+    <div class="waiter-head-row">
+      <div>
+        <h1 class="waiter-title">Waiter Dashboard</h1>
+        <p class="waiter-subtitle">Approve first orders, coordinate service, and close ready deliveries quickly.</p>
+      </div>
+      <div class="quick-actions">
+        <a href="/api/customer/sessions/pending-confirmations/">Pending API</a>
+        <a href="/api/dashboard/tables/status/">Table Status API</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="waiter-body">
+    {% if messages %}
+      <div class="flash-wrap">
+        {% for message in messages %}
+          <div class="flash">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <div class="summary-grid">
+      <div class="summary-card">
+        <div class="summary-label">Pending Confirmations</div>
+        <div class="summary-value">{{ pending_sessions|length }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Ready to Serve</div>
+        <div class="summary-value">{{ ready_items|length }}</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Auto Refresh</div>
+        <div class="summary-value" style="font-size:28px;">5s</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Logged User</div>
+        <div class="summary-value" style="font-size:22px; line-height:1.2;">{{ request.user.username }}</div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <article class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Pending Table Confirmations</h3>
+          <span class="panel-chip">{{ pending_sessions|length }} waiting</span>
+        </div>
+        <div class="panel-body">
+          {% for session in pending_sessions %}
+            <div class="queue-item">
+              <div class="queue-top">
+                <span class="session-id">Session #{{ session.id }}</span>
+                <span class="panel-chip">{{ session.created_at|date:"d M Y, h:i A" }}</span>
+              </div>
+              <p class="meta"><strong>Restaurant:</strong> {{ session.table.restaurant.name }}</p>
+              <p class="meta"><strong>Table:</strong> {{ session.table.table_number }}</p>
+              <p class="meta"><strong>Customer:</strong> {{ session.customer_name|default:"Guest" }}</p>
+              <div class="actions">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="approve_session">
+                  <input type="hidden" name="session_id" value="{{ session.id }}">
+                  <button class="btn btn-ok" type="submit">Approve Order</button>
+                </form>
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="reject_session">
+                  <input type="hidden" name="session_id" value="{{ session.id }}">
+                  <button class="btn btn-danger" type="submit">Reject</button>
+                </form>
+              </div>
+            </div>
+          {% empty %}
+            <div class="empty-state">No pending confirmations right now.</div>
+          {% endfor %}
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-head">
+          <h3 class="panel-title">Ready Items From Kitchen</h3>
+          <span class="panel-chip">{{ ready_items|length }} ready</span>
+        </div>
+        <div class="panel-body">
+          {% for item in ready_items %}
+            <div class="queue-item">
+              <div class="queue-top">
+                <span class="session-id">Session #{{ item.session.id }}</span>
+                <span class="panel-chip">Ready</span>
+              </div>
+              <p class="meta"><strong>Restaurant:</strong> {{ item.session.table.restaurant.name }}</p>
+              <p class="meta"><strong>Table:</strong> {{ item.session.table.table_number }}</p>
+              <p class="meta"><strong>Customer:</strong> {{ item.session.customer_name|default:"Guest" }}</p>
+              <p class="meta"><strong>Item:</strong> {{ item.menu_item.name }} x {{ item.quantity }}</p>
+              <p class="muted-note">Serve and mark to update order timeline.</p>
+              <div class="actions">
+                <form method="post">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="mark_served">
+                  <input type="hidden" name="item_id" value="{{ item.id }}">
+                  <button class="btn btn-action" type="submit">Mark Served</button>
+                </form>
+              </div>
+            </div>
+          {% empty %}
+            <div class="empty-state">No kitchen-ready items yet.</div>
+          {% endfor %}
+        </div>
+      </article>
+    </div>
+  </section>
 </div>
 
-<div class="card" style="margin-bottom:16px;">
-  <h3>Ready Items Notification (From Kitchen)</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Customer</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Item</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Qty</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in ready_items %}
-      <tr>
-        <td style="padding:8px;">#{{ item.session.id }}</td>
-        <td style="padding:8px;">{{ item.session.customer_name|default:"Guest" }}</td>
-        <td style="padding:8px;">{{ item.session.table.table_number }}</td>
-        <td style="padding:8px;">{{ item.menu_item.name }}</td>
-        <td style="padding:8px;">{{ item.quantity }}</td>
-        <td style="padding:8px;">
-          <form method="post" style="margin:0;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="mark_served">
-            <input type="hidden" name="item_id" value="{{ item.id }}">
-            <button type="submit">Mark Served</button>
-          </form>
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="6" style="padding:8px;">No ready notifications.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
-</div>
-
-<div class="card">
-  <h3>Quick Links</h3>
-  <p><a href="/api/customer/sessions/pending-confirmations/">Pending Confirmations API</a></p>
-  <p><a href="/api/dashboard/tables/status/">Table Status API</a></p>
-</div>
 <script>
   setTimeout(function () {
     window.location.reload();

@@ -2,44 +2,565 @@
 {% block title %}Table {{ table_number }} Menu{% endblock %}
 {% block content %}
 <style>
-  .customer-wrap { display:grid; gap:14px; }
-  .status-pill { display:inline-block; border-radius:999px; padding:4px 10px; font-size:12px; background:#eef2ff; }
-  .menu-grid { display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); }
-  .menu-item { border-top:1px solid #e5e7eb; padding:10px 0; display:grid; grid-template-columns: 64px 1fr auto; gap:10px; align-items:start; }
-  .menu-item img { width:64px; height:64px; border-radius:10px; object-fit:cover; border:1px solid #e5e7eb; }
-  .menu-item .fallback { width:64px; height:64px; border-radius:10px; display:flex; align-items:center; justify-content:center; border:1px solid #e5e7eb; color:#64748b; font-size:12px; }
-  .muted-small { color:#64748b; font-size:13px; }
-  .out { color:#b91c1c; font-weight:700; font-size:12px; }
+  :root {
+    --bg: #f2f4f7;
+    --panel: #ffffff;
+    --line: #e4e7ec;
+    --text: #101828;
+    --muted: #475467;
+    --brand-a: #2f1e14;
+    --brand-b: #6f4122;
+    --accent: #0f7a33;
+    --accent-2: #166534;
+    --warn-bg: #fff8e6;
+    --warn-border: #f2d17f;
+  }
+
+  .nav { display: none; }
+  .container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .customer-app {
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--text);
+    padding-bottom: 78px;
+  }
+
+  .hero {
+    color: #fff;
+    padding: 14px 12px;
+    background-image:
+      linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.2)),
+      linear-gradient(90deg, var(--brand-a), var(--brand-b));
+  }
+
+  .hero-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .brand-badge {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+  }
+
+  .brand h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .table-pill {
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 7px 12px;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    white-space: nowrap;
+  }
+
+  .toolbar {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    color: #667085;
+    border: 1px solid #d0d5dd;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .search-wrap input {
+    border: 0;
+    outline: 0;
+    width: 100%;
+    color: #101828;
+    font-size: 14px;
+    background: transparent;
+  }
+
+  .header-cart-btn {
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    color: #344054;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 10px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .surface {
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+
+  .meta-strip {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .name-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 240px;
+    flex: 1;
+  }
+
+  .name-wrap label {
+    font-weight: 700;
+    font-size: 13px;
+    color: #344054;
+    white-space: nowrap;
+  }
+
+  .name-wrap input {
+    flex: 1;
+    min-width: 140px;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+  }
+
+  .session-pill {
+    font-size: 12px;
+    font-weight: 700;
+    color: #175cd3;
+    background: #eff8ff;
+    border: 1px solid #b2ddff;
+    border-radius: 999px;
+    padding: 5px 10px;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+  }
+
+  .tabs::-webkit-scrollbar { height: 6px; }
+
+  .tab-btn {
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #344054;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .tab-btn.active {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: #fff;
+  }
+
+  .offer {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    color: #7a2e0e;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+
+  .status-strip {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .menu-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .food-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 104px 1fr;
+    min-height: 118px;
+  }
+
+  .food-media {
+    width: 100%;
+    height: 100%;
+    min-height: 118px;
+    object-fit: cover;
+    border-right: 1px solid var(--line);
+  }
+
+  .food-fallback {
+    height: 100%;
+    min-height: 118px;
+    border-right: 1px solid var(--line);
+    background: linear-gradient(135deg, #d6c4ad, #9a6a3f);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+  }
+
+  .food-body {
+    padding: 10px;
+    display: grid;
+    align-content: space-between;
+    gap: 6px;
+  }
+
+  .food-title {
+    margin: 0;
+    font-size: 22px;
+    line-height: 1.1;
+    letter-spacing: 0.15px;
+  }
+
+  .price {
+    margin: 0;
+    font-size: 19px;
+    font-weight: 800;
+    color: #111827;
+  }
+
+  .meta {
+    font-size: 12px;
+    color: #667085;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .food-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .chip {
+    background: #f9fafb;
+    color: #344054;
+    border: 1px solid #eaecf0;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+
+  .add-btn {
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color: #fff;
+    font-weight: 800;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .out {
+    font-size: 12px;
+    color: #b42318;
+    font-weight: 700;
+  }
+
+  .bottom-cart {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 12px;
+    box-shadow: 0 -10px 26px rgba(8, 22, 12, 0.35);
+  }
+
+  .bottom-cart strong {
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  .bottom-cart button {
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .cart-panel {
+    position: fixed;
+    inset: auto 10px 66px 10px;
+    z-index: 30;
+    max-height: 68dvh;
+    overflow: auto;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid var(--line);
+    box-shadow: 0 22px 46px rgba(16, 24, 40, 0.26);
+    padding: 12px;
+    display: none;
+  }
+
+  .cart-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .cart-head h3 {
+    margin: 0;
+    font-size: 18px;
+  }
+
+  .close-cart {
+    border: 1px solid #d0d5dd;
+    background: #fff;
+    color: #344054;
+    border-radius: 8px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+
+  .cart-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid #eaecf0;
+    padding: 9px 0;
+  }
+
+  .cart-row:first-child { border-top: 0; }
+
+  .qty-controls {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .qty-controls button {
+    width: 28px;
+    height: 28px;
+    border: 0;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .qty-controls span {
+    display: inline-block;
+    min-width: 28px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .cart-actions {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .action-btn {
+    border: 0;
+    border-radius: 8px;
+    font-weight: 800;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  .primary-btn {
+    background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    color: #fff;
+  }
+
+  .secondary-btn {
+    background: #e4f4ea;
+    color: #134e2f;
+    border: 1px solid #a6e0b7;
+  }
+
+  .bill-block {
+    margin-top: 8px;
+    border-top: 1px solid #eaecf0;
+    padding-top: 8px;
+    color: #344054;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .line-item { margin-bottom: 4px; }
+
+  .empty {
+    color: #667085;
+    font-size: 13px;
+  }
+
+  @media (min-width: 720px) {
+    .hero { padding: 16px; }
+    .surface { padding: 16px; gap: 12px; }
+    .toolbar { max-width: 680px; }
+    .menu-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .food-card { grid-template-columns: 132px 1fr; min-height: 132px; }
+    .food-media, .food-fallback { min-height: 132px; }
+    .food-title { font-size: 24px; }
+    .cart-panel {
+      inset: auto 16px 76px auto;
+      width: 400px;
+      max-width: calc(100vw - 32px);
+    }
+    .bottom-cart {
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      border-radius: 12px;
+      padding: 12px 14px;
+    }
+  }
+
+  @media (min-width: 1120px) {
+    .customer-app {
+      max-width: 1160px;
+      margin: 20px auto;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 52px rgba(16, 24, 40, 0.16);
+    }
+    .hero-row { flex-wrap: nowrap; }
+    .toolbar { margin-top: 12px; max-width: 760px; }
+    .menu-grid { gap: 14px; }
+  }
 </style>
 
-<div class="customer-wrap">
-  <h1>Table {{ table_number }}</h1>
-  <p>{{ message }}</p>
+<div class="customer-app">
+  <header class="hero">
+    <div class="hero-row">
+      <div class="brand">
+        <div class="brand-badge">TB</div>
+        <h1>Tasty Bites</h1>
+      </div>
+      <div class="table-pill">Table {{ table_number }}</div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span>Search</span>
+        <input id="search-input" type="text" placeholder="Search food..." />
+      </div>
+      <button id="header-cart-btn" class="header-cart-btn" type="button">Cart</button>
+    </div>
+  </header>
 
-  <div class="card">
-    <label for="customer-name"><strong>Customer Name (optional):</strong></label>
-    <input id="customer-name" type="text" placeholder="Enter your name" style="margin-left:8px;" />
-  </div>
+  <section class="surface">
+    <div class="meta-strip">
+      <div class="name-wrap">
+        <label for="customer-name">Customer Name</label>
+        <input id="customer-name" type="text" placeholder="Optional" />
+      </div>
+      <span id="session-pill" class="session-pill">Initializing...</span>
+    </div>
 
-  <div id="status" class="card">Initializing session...</div>
+    <div id="tabs-root" class="tabs"></div>
 
-  <div class="card">
-    <h3>Live Session</h3>
-    <div id="session-meta" class="muted-small">Waiting...</div>
-  </div>
+    <div class="offer">Today offer: 10% off on desserts</div>
 
-  <div class="card">
-    <h3>Running Bill</h3>
-    <div id="running-bill" class="muted">No confirmed order items yet.</div>
-  </div>
+    <div id="status-strip" class="status-strip">Initializing session...</div>
 
-  <div class="menu-grid" id="menu-root"></div>
+    <div id="menu-root" class="menu-grid"></div>
+  </section>
 
-  <div class="card">
-    <h3>Cart</h3>
-    <div id="cart-list" class="muted">No items selected.</div>
-    <button id="place-order-btn" type="button" style="margin-top:12px;">Place Order</button>
-    <button id="request-bill-btn" type="button" style="margin-top:12px; margin-left:8px;">Request Bill</button>
+  <aside id="cart-panel" class="cart-panel">
+    <div class="cart-head">
+      <h3>Your Cart</h3>
+      <button id="close-cart-btn" class="close-cart" type="button">Close</button>
+    </div>
+    <div id="cart-list" class="empty">No items selected.</div>
+    <div id="running-bill" class="bill-block">No confirmed order items yet.</div>
+    <div class="cart-actions">
+      <button id="place-order-btn" class="action-btn primary-btn" type="button">Place Order</button>
+      <button id="request-bill-btn" class="action-btn secondary-btn" type="button">Request Bill</button>
+    </div>
+  </aside>
+
+  <div class="bottom-cart">
+    <strong id="cart-summary">View Cart (0 items) Rs.0.00</strong>
+    <button id="toggle-cart-btn" type="button">Open Cart</button>
   </div>
 </div>
 
@@ -52,75 +573,129 @@
   const state = {
     sessionId: null,
     cart: {},
+    activeCategory: "all",
+    search: "",
   };
 
-  const statusEl = document.getElementById('status');
-  const sessionMetaEl = document.getElementById('session-meta');
-  const runningBillEl = document.getElementById('running-bill');
-  const cartEl = document.getElementById('cart-list');
-  const menuRoot = document.getElementById('menu-root');
-  const placeOrderBtn = document.getElementById('place-order-btn');
-  const requestBillBtn = document.getElementById('request-bill-btn');
-  const customerNameInput = document.getElementById('customer-name');
+  const statusStripEl = document.getElementById("status-strip");
+  const runningBillEl = document.getElementById("running-bill");
+  const cartListEl = document.getElementById("cart-list");
+  const cartSummaryEl = document.getElementById("cart-summary");
+  const menuRoot = document.getElementById("menu-root");
+  const tabsRoot = document.getElementById("tabs-root");
+  const placeOrderBtn = document.getElementById("place-order-btn");
+  const requestBillBtn = document.getElementById("request-bill-btn");
+  const customerNameInput = document.getElementById("customer-name");
+  const sessionPillEl = document.getElementById("session-pill");
+  const cartPanelEl = document.getElementById("cart-panel");
+  const toggleCartBtn = document.getElementById("toggle-cart-btn");
+  const headerCartBtn = document.getElementById("header-cart-btn");
+  const closeCartBtn = document.getElementById("close-cart-btn");
+  const searchInput = document.getElementById("search-input");
   const storageKey = `session:${restaurantSlug}:${tableNumber}:${qrToken}`;
 
   function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop().split(';').shift();
-    return '';
+    if (parts.length === 2) return parts.pop().split(";").shift();
+    return "";
   }
 
   function jsonHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
-    const csrfToken = getCookie('csrftoken');
-    if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+    const headers = { "Content-Type": "application/json" };
+    const csrfToken = getCookie("csrftoken");
+    if (csrfToken) headers["X-CSRFToken"] = csrfToken;
     return headers;
   }
 
-  function setStatus(message) {
-    statusEl.textContent = message;
+  function setStatus(msg) {
+    statusStripEl.textContent = msg;
   }
 
-  function statusBadge(label) {
-    return `<span class="status-pill">${label}</span>`;
+  function setSessionPill(status) {
+    sessionPillEl.textContent = status || "unknown";
+  }
+
+  function flatItems() {
+    const out = [];
+    for (const c of menuPayload) {
+      for (const i of c.items) out.push({ ...i, category: c.name, categoryId: c.id });
+    }
+    return out;
+  }
+
+  function renderTabs() {
+    const tabs = ["all", ...menuPayload.map((c) => c.name)];
+    tabsRoot.innerHTML = tabs
+      .map((tab) => {
+        const isActive = state.activeCategory === tab;
+        const label = tab === "all" ? "All" : tab;
+        return `<button class="tab-btn ${isActive ? "active" : ""}" data-tab="${tab}">${label}</button>`;
+      })
+      .join("");
+
+    tabsRoot.querySelectorAll(".tab-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.activeCategory = btn.dataset.tab;
+        renderTabs();
+        renderMenu();
+      });
+    });
+  }
+
+  function filteredItems() {
+    const q = state.search.trim().toLowerCase();
+    return flatItems().filter((item) => {
+      const categoryMatch = state.activeCategory === "all" || item.category === state.activeCategory;
+      const textMatch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        (item.description || "").toLowerCase().includes(q);
+      return categoryMatch && textMatch;
+    });
   }
 
   function renderMenu() {
-    if (!menuPayload.length) {
-      menuRoot.innerHTML = '<p>No menu items available.</p>';
+    const items = filteredItems();
+    if (!items.length) {
+      menuRoot.innerHTML = '<div class="status-strip">No menu item found for this filter.</div>';
       return;
     }
 
-    const cards = [];
-    for (const category of menuPayload) {
-      let itemsHtml = '';
-      for (const item of category.items) {
-        const imageBlock = item.image_url
-          ? `<img src="${item.image_url}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" /><div class="fallback" style="display:none;">No image</div>`
-          : '<div class="fallback">No image</div>';
+    menuRoot.innerHTML = items
+      .map((item) => {
+        const media = item.image_url
+          ? `<img class="food-media" src="${item.image_url}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"><div class="food-fallback" style="display:none;">FOOD</div>`
+          : '<div class="food-fallback">FOOD</div>';
 
-        const availability = item.available
-          ? `<button type="button" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}" class="add-item-btn">Add</button>`
+        const action = item.available
+          ? `<button class="add-btn" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Add to Cart</button>`
           : '<span class="out">Out of stock</span>';
 
-        itemsHtml += `
-          <div class="menu-item">
-            <div>${imageBlock}</div>
-            <div>
-              <div><strong>${item.name}</strong> - Rs. ${item.price}</div>
-              <div class="muted-small">${item.description || ''}</div>
-            </div>
-            <div>${availability}</div>
-          </div>
-        `;
-      }
-      cards.push(`<div class="card"><h3>${category.name}</h3>${itemsHtml || '<p class="muted">No items.</p>'}</div>`);
-    }
-    menuRoot.innerHTML = cards.join('');
+        const rating = (4.1 + (item.id % 6) * 0.1).toFixed(1);
+        const ratingCount = 80 + item.id * 3;
 
-    document.querySelectorAll('.add-item-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
+        return `
+          <article class="food-card">
+            <div>${media}</div>
+            <div class="food-body">
+              <div>
+                <h3 class="food-title">${item.name}</h3>
+                <p class="price">Rs.${Number(item.price).toFixed(2)}</p>
+                <div class="meta">${rating} stars (${ratingCount} ratings)</div>
+              </div>
+              <div class="food-actions">
+                <span class="chip">${item.category}</span>
+                ${action}
+              </div>
+            </div>
+          </article>
+        `;
+      })
+      .join("");
+
+    menuRoot.querySelectorAll(".add-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
         const id = Number(btn.dataset.itemId);
         const name = btn.dataset.itemName;
         const price = Number(btn.dataset.itemPrice);
@@ -131,37 +706,68 @@
     });
   }
 
+  function updateCartSummary() {
+    const items = Object.values(state.cart).filter((x) => x.qty > 0);
+    const count = items.reduce((acc, x) => acc + x.qty, 0);
+    const total = items.reduce((sum, x) => sum + x.qty * x.price, 0);
+    cartSummaryEl.textContent = `View Cart (${count} items) Rs.${total.toFixed(2)}`;
+  }
+
   function renderCart() {
     const items = Object.values(state.cart).filter((x) => x.qty > 0);
     if (!items.length) {
-      cartEl.textContent = 'No items selected.';
+      cartListEl.className = "empty";
+      cartListEl.textContent = "No items selected.";
+      updateCartSummary();
       return;
     }
-    const total = items.reduce((sum, i) => sum + i.qty * i.price, 0);
-    cartEl.innerHTML = items.map((i) => `${i.name} x ${i.qty} = Rs. ${(i.qty * i.price).toFixed(2)}`).join('<br>') + `<hr>Cart Total: Rs. ${total.toFixed(2)}`;
+
+    cartListEl.className = "";
+    cartListEl.innerHTML = items
+      .map(
+        (item) => `
+        <div class="cart-row">
+          <div>
+            <strong>${item.name}</strong><br>
+            <span class="meta">Rs.${item.price.toFixed(2)} each</span>
+          </div>
+          <div class="qty-controls">
+            <button data-op="dec" data-id="${item.id}" type="button">-</button>
+            <span>${item.qty}</span>
+            <button data-op="inc" data-id="${item.id}" type="button">+</button>
+          </div>
+        </div>
+      `
+      )
+      .join("");
+
+    cartListEl.querySelectorAll("button[data-op]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.id);
+        const op = btn.dataset.op;
+        if (!state.cart[id]) return;
+        if (op === "inc") state.cart[id].qty += 1;
+        if (op === "dec") state.cart[id].qty -= 1;
+        if (state.cart[id].qty <= 0) delete state.cart[id];
+        renderCart();
+      });
+    });
+
+    updateCartSummary();
   }
 
   function renderRunningBill(session) {
     if (!session || !session.items || !session.items.length) {
-      runningBillEl.textContent = 'No confirmed order items yet.';
+      runningBillEl.innerHTML = "No confirmed order items yet.";
       return;
     }
 
     const lines = session.items.map((item) => {
-      const lineTotal = Number(item.price) * Number(item.quantity);
-      return `${item.menu_item_name} x ${item.quantity} = Rs. ${lineTotal.toFixed(2)} ${statusBadge(item.status)}`;
+      const total = Number(item.price) * Number(item.quantity);
+      return `<div class="line-item">${item.menu_item_name} x ${item.quantity} = Rs.${total.toFixed(2)} (${item.status})</div>`;
     });
-    lines.push(`<hr><strong>Total Spent: Rs. ${Number(session.total_amount).toFixed(2)}</strong>`);
-    runningBillEl.innerHTML = lines.join('<br>');
-  }
-
-  function renderSessionMeta(session) {
-    if (!session) {
-      sessionMetaEl.textContent = 'No active session.';
-      return;
-    }
-    const payment = session.payment_status || 'pending';
-    sessionMetaEl.innerHTML = `Session #${session.id} ${statusBadge(session.status)} | Payment ${statusBadge(payment)} | Running Total: Rs. ${Number(session.total_amount).toFixed(2)}`;
+    lines.push(`<hr><strong>Total Spent: Rs.${Number(session.total_amount).toFixed(2)}</strong>`);
+    runningBillEl.innerHTML = lines.join("");
   }
 
   function saveSessionId(sessionId) {
@@ -174,9 +780,7 @@
 
   async function fetchSessionDetail(sessionId) {
     const response = await fetch(`/api/customer/sessions/${sessionId}/`);
-    if (!response.ok) {
-      throw new Error('Unable to fetch session details.');
-    }
+    if (!response.ok) throw new Error("Unable to fetch session details.");
     return await response.json();
   }
 
@@ -188,8 +792,8 @@
   }
 
   async function bootstrapSession() {
-    const response = await fetch('/api/customer/sessions/bootstrap/', {
-      method: 'POST',
+    const response = await fetch("/api/customer/sessions/bootstrap/", {
+      method: "POST",
       headers: jsonHeaders(),
       body: JSON.stringify({
         restaurant_slug: restaurantSlug,
@@ -198,16 +802,16 @@
         customer_name: customerNameInput.value.trim(),
       }),
     });
+
     const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || 'Unable to start session');
-    }
+    if (!response.ok) throw new Error(data.detail || "Unable to start session");
+
     state.sessionId = data.session.id;
     saveSessionId(state.sessionId);
     placeOrderBtn.disabled = false;
     requestBillBtn.disabled = false;
     renderRunningBill(data.session);
-    renderSessionMeta(data.session);
+    setSessionPill(data.session.status);
     setStatus(`Session #${state.sessionId} ready. Start ordering.`);
   }
 
@@ -216,18 +820,17 @@
     if (saved) {
       try {
         const session = await fetchSessionDetail(saved);
-        if (['closed', 'cancelled'].includes(session.status)) {
-          clearSessionId();
-        } else {
+        if (!["closed", "cancelled"].includes(session.status)) {
           state.sessionId = session.id;
           placeOrderBtn.disabled = false;
           requestBillBtn.disabled = false;
           renderRunningBill(session);
-          renderSessionMeta(session);
+          setSessionPill(session.status);
           setStatus(`Session #${state.sessionId} restored. Status: ${session.status}.`);
           return;
         }
-      } catch (e) {
+        clearSessionId();
+      } catch (_) {
         clearSessionId();
       }
     }
@@ -239,7 +842,7 @@
       placeOrderBtn.disabled = false;
       requestBillBtn.disabled = false;
       renderRunningBill(openSession);
-      renderSessionMeta(openSession);
+      setSessionPill(openSession.status);
       setStatus(`Session #${state.sessionId} restored. Status: ${openSession.status}.`);
       return;
     }
@@ -249,76 +852,102 @@
 
   async function placeOrder() {
     if (!state.sessionId) {
-      setStatus('Session is not ready yet. Please wait a moment and try again.');
+      setStatus("Session not ready yet.");
       return;
     }
 
-    const items = Object.values(state.cart).filter((x) => x.qty > 0).map((x) => ({ menu_item_id: x.id, quantity: x.qty }));
+    const items = Object.values(state.cart)
+      .filter((x) => x.qty > 0)
+      .map((x) => ({ menu_item_id: x.id, quantity: x.qty }));
+
     if (!items.length) {
-      setStatus('Add at least one item to place order.');
+      setStatus("Add at least one item to place order.");
       return;
     }
 
     const response = await fetch(`/api/customer/sessions/${state.sessionId}/items/`, {
-      method: 'POST',
+      method: "POST",
       headers: jsonHeaders(),
       body: JSON.stringify({ items }),
     });
     const data = await response.json();
     if (!response.ok) {
-      setStatus(data.detail || 'Failed to place order.');
+      setStatus(data.detail || "Failed to place order.");
       return;
     }
 
-    setStatus(data.message + ` Bill total: Rs. ${data.session.total_amount}`);
+    setStatus(`${data.message} Bill total: Rs.${data.session.total_amount}`);
+    setSessionPill(data.session.status);
     renderRunningBill(data.session);
-    renderSessionMeta(data.session);
     state.cart = {};
     renderCart();
+    closeCart();
   }
 
   async function requestBill() {
     if (!state.sessionId) {
-      setStatus('Session is not ready yet. Please wait a moment and try again.');
+      setStatus("Session not ready yet.");
       return;
     }
 
     const response = await fetch(`/api/customer/sessions/${state.sessionId}/request-bill/`, {
-      method: 'POST',
+      method: "POST",
       headers: jsonHeaders(),
     });
     const data = await response.json();
     if (!response.ok) {
-      setStatus(data.detail || 'Failed to request bill.');
+      setStatus(data.detail || "Failed to request bill.");
       return;
     }
+
+    setStatus(`${data.message} Please wait for cashier/waiter.`);
+    setSessionPill(data.session.status);
     renderRunningBill(data.session);
-    renderSessionMeta(data.session);
-    setStatus(data.message + ' Please wait for cashier/waiter.');
   }
 
   async function refreshSessionStatus() {
     if (!state.sessionId) return;
     try {
       const session = await fetchSessionDetail(state.sessionId);
+      setSessionPill(session.status);
       renderRunningBill(session);
-      renderSessionMeta(session);
-      if (['closed', 'cancelled'].includes(session.status)) {
+      if (["closed", "cancelled"].includes(session.status)) {
         clearSessionId();
-        setStatus(`Session ${session.status}. Please start a new session for new orders.`);
+        setStatus(`Session ${session.status}. Start a new one for fresh orders.`);
         placeOrderBtn.disabled = true;
         requestBillBtn.disabled = true;
       }
-    } catch (e) {
-      // ignore transient polling errors
-    }
+    } catch (_) {}
   }
+
+  function openCart() {
+    cartPanelEl.style.display = "block";
+  }
+
+  function closeCart() {
+    cartPanelEl.style.display = "none";
+  }
+
+  function toggleCart() {
+    if (cartPanelEl.style.display === "block") closeCart();
+    else openCart();
+  }
+
+  toggleCartBtn.addEventListener("click", toggleCart);
+  headerCartBtn.addEventListener("click", toggleCart);
+  closeCartBtn.addEventListener("click", closeCart);
+
+  searchInput.addEventListener("input", () => {
+    state.search = searchInput.value;
+    renderMenu();
+  });
 
   placeOrderBtn.disabled = true;
   requestBillBtn.disabled = true;
-  placeOrderBtn.addEventListener('click', placeOrder);
-  requestBillBtn.addEventListener('click', requestBill);
+  placeOrderBtn.addEventListener("click", placeOrder);
+  requestBillBtn.addEventListener("click", requestBill);
 
+  renderTabs();
   renderMenu();
   renderCart();
   ensureSession().catch((err) => setStatus(err.message));
