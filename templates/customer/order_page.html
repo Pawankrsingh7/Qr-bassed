@@ -17,6 +17,7 @@
   }
 
   .nav { display: none; }
+
   .container {
     max-width: 1240px;
     margin: 0 auto;
@@ -30,7 +31,7 @@
     min-height: 100dvh;
     background: var(--bg);
     color: var(--text);
-    padding-bottom: 78px;
+    padding-bottom: 16px;
   }
 
   .hero {
@@ -75,6 +76,12 @@
     line-height: 1.1;
   }
 
+  .hero-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .table-pill {
     font-size: 14px;
     font-weight: 700;
@@ -85,11 +92,41 @@
     white-space: nowrap;
   }
 
+  .icon-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: grid;
+    place-items: center;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .cart-icon-count {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    background: #dc2626;
+    border: 2px solid rgba(0, 0, 0, 0.35);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 800;
+    display: grid;
+    place-items: center;
+    padding: 0 4px;
+  }
+
   .toolbar {
     margin-top: 10px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
+    max-width: 760px;
   }
 
   .search-wrap {
@@ -112,67 +149,10 @@
     background: transparent;
   }
 
-  .header-cart-btn {
-    border: 1px solid #d0d5dd;
-    background: #fff;
-    color: #344054;
-    border-radius: 10px;
-    font-weight: 700;
-    padding: 10px 12px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-
   .surface {
     padding: 12px;
     display: grid;
     gap: 10px;
-  }
-
-  .meta-strip {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .name-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    min-width: 240px;
-    flex: 1;
-  }
-
-  .name-wrap label {
-    font-weight: 700;
-    font-size: 13px;
-    color: #344054;
-    white-space: nowrap;
-  }
-
-  .name-wrap input {
-    flex: 1;
-    min-width: 140px;
-    border: 1px solid #d0d5dd;
-    border-radius: 8px;
-    padding: 8px 10px;
-    font-size: 14px;
-  }
-
-  .session-pill {
-    font-size: 12px;
-    font-weight: 700;
-    color: #175cd3;
-    background: #eff8ff;
-    border: 1px solid #b2ddff;
-    border-radius: 999px;
-    padding: 5px 10px;
   }
 
   .tabs {
@@ -211,15 +191,6 @@
     border-radius: 10px;
     padding: 10px 12px;
     font-weight: 700;
-    font-size: 14px;
-  }
-
-  .status-strip {
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    padding: 10px 12px;
-    color: var(--muted);
     font-size: 14px;
   }
 
@@ -291,9 +262,15 @@
 
   .food-actions {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 8px;
+  }
+
+  .card-action-wrap {
+    display: grid;
+    gap: 6px;
+    justify-items: end;
   }
 
   .chip {
@@ -318,42 +295,39 @@
     white-space: nowrap;
   }
 
+  .add-btn.full {
+    width: 126px;
+  }
+
+  .inline-qty {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .inline-qty button {
+    width: 30px;
+    height: 30px;
+    border: 0;
+    background: #f9fafb;
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .inline-qty span {
+    min-width: 28px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+  }
+
   .out {
     font-size: 12px;
     color: #b42318;
     font-weight: 700;
-  }
-
-  .bottom-cart {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 20;
-    background: linear-gradient(180deg, var(--accent), var(--accent-2));
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 10px 12px;
-    box-shadow: 0 -10px 26px rgba(8, 22, 12, 0.35);
-  }
-
-  .bottom-cart strong {
-    font-size: 15px;
-    line-height: 1.2;
-  }
-
-  .bottom-cart button {
-    border: 1px solid rgba(255, 255, 255, 0.35);
-    background: rgba(255, 255, 255, 0.1);
-    color: #fff;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-weight: 700;
-    cursor: pointer;
-    white-space: nowrap;
   }
 
   .cart-panel {
@@ -465,15 +439,87 @@
 
   .line-item { margin-bottom: 4px; }
 
+  .bill-separator {
+    margin: 8px 0;
+    border-top: 1px solid #eaecf0;
+    padding-top: 6px;
+  }
+
   .empty {
     color: #667085;
     font-size: 13px;
   }
 
+  .progress-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: grid;
+    gap: 6px;
+  }
+
+  .progress-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 13px;
+    color: #344054;
+    font-weight: 700;
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 9px;
+    background: #eaecf0;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #0f7a33);
+    transition: width .25s ease;
+  }
+
+  .toast-wrap {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 60;
+    display: grid;
+    gap: 8px;
+    max-width: min(90vw, 340px);
+  }
+
+  .toast {
+    border-radius: 10px;
+    border: 1px solid #d5d9eb;
+    background: #fff;
+    color: #1f2937;
+    box-shadow: 0 12px 28px rgba(16, 24, 40, 0.18);
+    padding: 9px 11px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .toast.success {
+    border-color: #b7ebc3;
+    background: #effcf2;
+    color: #14532d;
+  }
+
+  .toast.error {
+    border-color: #f5c2c7;
+    background: #fff1f2;
+    color: #7f1d1d;
+  }
+
   @media (min-width: 720px) {
     .hero { padding: 16px; }
     .surface { padding: 16px; gap: 12px; }
-    .toolbar { max-width: 680px; }
     .menu-grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
@@ -486,13 +532,6 @@
       width: 400px;
       max-width: calc(100vw - 32px);
     }
-    .bottom-cart {
-      left: 16px;
-      right: 16px;
-      bottom: 14px;
-      border-radius: 12px;
-      padding: 12px 14px;
-    }
   }
 
   @media (min-width: 1120px) {
@@ -504,7 +543,7 @@
       box-shadow: 0 20px 52px rgba(16, 24, 40, 0.16);
     }
     .hero-row { flex-wrap: nowrap; }
-    .toolbar { margin-top: 12px; max-width: 760px; }
+    .toolbar { margin-top: 12px; }
     .menu-grid { gap: 14px; }
   }
 </style>
@@ -516,31 +555,38 @@
         <div class="brand-badge">TB</div>
         <h1>Tasty Bites</h1>
       </div>
-      <div class="table-pill">Table {{ table_number }}</div>
+      <div class="hero-actions">
+        <div class="table-pill">Table {{ table_number }}</div>
+        <button id="profile-btn" class="icon-btn" type="button" aria-label="Profile">G</button>
+        <button id="header-cart-btn" class="icon-btn" type="button" aria-label="Cart">
+          C
+          <span id="header-cart-count" class="cart-icon-count">0</span>
+        </button>
+      </div>
     </div>
     <div class="toolbar">
       <div class="search-wrap">
         <span>Search</span>
         <input id="search-input" type="text" placeholder="Search food..." />
       </div>
-      <button id="header-cart-btn" class="header-cart-btn" type="button">Cart</button>
     </div>
   </header>
 
   <section class="surface">
-    <div class="meta-strip">
-      <div class="name-wrap">
-        <label for="customer-name">Customer Name</label>
-        <input id="customer-name" type="text" placeholder="Optional" />
-      </div>
-      <span id="session-pill" class="session-pill">Initializing...</span>
-    </div>
-
     <div id="tabs-root" class="tabs"></div>
 
     <div class="offer">Today offer: 10% off on desserts</div>
 
-    <div id="status-strip" class="status-strip">Initializing session...</div>
+    <div id="progress-card" class="progress-card" style="display:none;">
+      <div class="progress-head">
+        <span id="progress-title">Your dishes are preparing</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-track">
+        <div id="progress-fill" class="progress-fill"></div>
+      </div>
+      <div id="progress-subtext" class="meta">Waiting for first order.</div>
+    </div>
 
     <div id="menu-root" class="menu-grid"></div>
   </section>
@@ -554,15 +600,13 @@
     <div id="running-bill" class="bill-block">No confirmed order items yet.</div>
     <div class="cart-actions">
       <button id="place-order-btn" class="action-btn primary-btn" type="button">Place Order</button>
-      <button id="request-bill-btn" class="action-btn secondary-btn" type="button">Request Bill</button>
+      <button id="request-bill-btn" class="action-btn secondary-btn" type="button" style="display:none;">Request Bill</button>
     </div>
   </aside>
 
-  <div class="bottom-cart">
-    <strong id="cart-summary">View Cart (0 items) Rs.0.00</strong>
-    <button id="toggle-cart-btn" type="button">Open Cart</button>
-  </div>
 </div>
+
+<div id="toast-wrap" class="toast-wrap"></div>
 
 <script>
   const restaurantSlug = "{{ restaurant_slug }}";
@@ -573,26 +617,33 @@
   const state = {
     sessionId: null,
     cart: {},
+    draftQty: {},
     activeCategory: "all",
     search: "",
+    customerName: "",
+    hasPlacedOrder: false,
   };
 
-  const statusStripEl = document.getElementById("status-strip");
   const runningBillEl = document.getElementById("running-bill");
   const cartListEl = document.getElementById("cart-list");
-  const cartSummaryEl = document.getElementById("cart-summary");
   const menuRoot = document.getElementById("menu-root");
   const tabsRoot = document.getElementById("tabs-root");
   const placeOrderBtn = document.getElementById("place-order-btn");
   const requestBillBtn = document.getElementById("request-bill-btn");
-  const customerNameInput = document.getElementById("customer-name");
-  const sessionPillEl = document.getElementById("session-pill");
   const cartPanelEl = document.getElementById("cart-panel");
-  const toggleCartBtn = document.getElementById("toggle-cart-btn");
   const headerCartBtn = document.getElementById("header-cart-btn");
+  const headerCartCountEl = document.getElementById("header-cart-count");
+  const profileBtn = document.getElementById("profile-btn");
   const closeCartBtn = document.getElementById("close-cart-btn");
   const searchInput = document.getElementById("search-input");
+  const progressCardEl = document.getElementById("progress-card");
+  const progressFillEl = document.getElementById("progress-fill");
+  const progressTitleEl = document.getElementById("progress-title");
+  const progressPercentEl = document.getElementById("progress-percent");
+  const progressSubtextEl = document.getElementById("progress-subtext");
+  const toastWrapEl = document.getElementById("toast-wrap");
   const storageKey = `session:${restaurantSlug}:${tableNumber}:${qrToken}`;
+  const customerNameKey = `customer-name:${restaurantSlug}:${tableNumber}:${qrToken}`;
 
   function getCookie(name) {
     const value = `; ${document.cookie}`;
@@ -608,24 +659,87 @@
     return headers;
   }
 
-  function setStatus(msg) {
-    statusStripEl.textContent = msg;
+  function showToast(message, type = "success") {
+    const div = document.createElement("div");
+    div.className = `toast ${type}`;
+    div.textContent = message;
+    toastWrapEl.appendChild(div);
+    window.setTimeout(() => {
+      div.style.opacity = "0";
+      div.style.transition = "opacity .2s ease";
+      window.setTimeout(() => div.remove(), 220);
+    }, 2200);
   }
 
-  function setSessionPill(status) {
-    sessionPillEl.textContent = status || "unknown";
+  function setStatus(msg, type = "success") {
+    if (!msg) return;
+    showToast(msg, type);
+  }
+
+  function setSessionPill(_status) {}
+
+  function setCustomerChip() {
+    const name = state.customerName || "Guest";
+    profileBtn.textContent = name.charAt(0).toUpperCase() || "G";
+  }
+
+  function saveCustomerName(name) {
+    localStorage.setItem(customerNameKey, name || "");
+  }
+
+  function loadCustomerName() {
+    state.customerName = (localStorage.getItem(customerNameKey) || "").trim();
+    setCustomerChip();
+  }
+
+  function normalizeStatus(status) {
+    return (status || "").toString().toLowerCase();
+  }
+
+  function hasOrderedStatus(status) {
+    const s = normalizeStatus(status);
+    return s === "ordered" || s === "preparing" || s === "ready";
+  }
+
+  function hasServedStatus(status) {
+    return normalizeStatus(status) === "served";
+  }
+
+  function updateRequestBillVisibility(session) {
+    const hasItemsInSession = Boolean(session && session.items && session.items.length);
+    const canRequest = state.hasPlacedOrder || hasItemsInSession;
+    requestBillBtn.style.display = canRequest ? "block" : "none";
+  }
+
+  function ensureCustomerNameForFirstOrder() {
+    if (state.hasPlacedOrder || state.customerName) return true;
+    const typedName = window.prompt("Enter your name for first order:");
+    if (typedName === null) return false;
+    const clean = typedName.trim();
+    if (!clean) {
+      setStatus("Name is required for first order.", "error");
+      return false;
+    }
+    state.customerName = clean;
+    saveCustomerName(clean);
+    setCustomerChip();
+    return true;
   }
 
   function flatItems() {
     const out = [];
-    for (const c of menuPayload) {
-      for (const i of c.items) out.push({ ...i, category: c.name, categoryId: c.id });
+    for (const category of menuPayload) {
+      for (const item of category.items) out.push({ ...item, category: category.name, categoryId: category.id });
     }
     return out;
   }
 
+  function getDraftQty(itemId) {
+    return Math.max(1, Number(state.draftQty[itemId] || 1));
+  }
+
   function renderTabs() {
-    const tabs = ["all", ...menuPayload.map((c) => c.name)];
+    const tabs = ["all", ...menuPayload.map((category) => category.name)];
     tabsRoot.innerHTML = tabs
       .map((tab) => {
         const isActive = state.activeCategory === tab;
@@ -644,13 +758,10 @@
   }
 
   function filteredItems() {
-    const q = state.search.trim().toLowerCase();
+    const query = state.search.trim().toLowerCase();
     return flatItems().filter((item) => {
       const categoryMatch = state.activeCategory === "all" || item.category === state.activeCategory;
-      const textMatch =
-        !q ||
-        item.name.toLowerCase().includes(q) ||
-        (item.description || "").toLowerCase().includes(q);
+      const textMatch = !query || item.name.toLowerCase().includes(query) || (item.description || "").toLowerCase().includes(query);
       return categoryMatch && textMatch;
     });
   }
@@ -658,7 +769,7 @@
   function renderMenu() {
     const items = filteredItems();
     if (!items.length) {
-      menuRoot.innerHTML = '<div class="status-strip">No menu item found for this filter.</div>';
+      menuRoot.innerHTML = '<div class="empty">No menu item found for this filter.</div>';
       return;
     }
 
@@ -668,9 +779,20 @@
           ? `<img class="food-media" src="${item.image_url}" alt="${item.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';"><div class="food-fallback" style="display:none;">FOOD</div>`
           : '<div class="food-fallback">FOOD</div>';
 
-        const action = item.available
-          ? `<button class="add-btn" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Add to Cart</button>`
-          : '<span class="out">Out of stock</span>';
+        const selectedQty = getDraftQty(item.id);
+        let action = '<span class="out">Out of stock</span>';
+        if (item.available) {
+          action = `
+            <div class="card-action-wrap">
+              <div class="inline-qty">
+                <button type="button" data-card-op="dec" data-item-id="${item.id}">-</button>
+                <span>${selectedQty}</span>
+                <button type="button" data-card-op="inc" data-item-id="${item.id}">+</button>
+              </div>
+              <button class="add-btn full" data-item-id="${item.id}" data-item-name="${item.name}" data-item-price="${item.price}">Add to Cart</button>
+            </div>
+          `;
+        }
 
         const rating = (4.1 + (item.id % 6) * 0.1).toFixed(1);
         const ratingCount = 80 + item.id * 3;
@@ -700,21 +822,33 @@
         const name = btn.dataset.itemName;
         const price = Number(btn.dataset.itemPrice);
         if (!state.cart[id]) state.cart[id] = { id, name, price, qty: 0 };
-        state.cart[id].qty += 1;
+        state.cart[id].qty += getDraftQty(id);
         renderCart();
+        setStatus(`${name} added to cart.`);
+      });
+    });
+
+    menuRoot.querySelectorAll("button[data-card-op]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = Number(btn.dataset.itemId);
+        const op = btn.dataset.cardOp;
+        const current = getDraftQty(id);
+        if (op === "inc") state.draftQty[id] = Math.min(20, current + 1);
+        if (op === "dec") state.draftQty[id] = Math.max(1, current - 1);
+        setStatus(`Selected quantity: ${state.draftQty[id]}`);
+        renderMenu();
       });
     });
   }
 
   function updateCartSummary() {
-    const items = Object.values(state.cart).filter((x) => x.qty > 0);
-    const count = items.reduce((acc, x) => acc + x.qty, 0);
-    const total = items.reduce((sum, x) => sum + x.qty * x.price, 0);
-    cartSummaryEl.textContent = `View Cart (${count} items) Rs.${total.toFixed(2)}`;
+    const items = Object.values(state.cart).filter((item) => item.qty > 0);
+    const count = items.reduce((acc, item) => acc + item.qty, 0);
+    headerCartCountEl.textContent = String(count);
   }
 
   function renderCart() {
-    const items = Object.values(state.cart).filter((x) => x.qty > 0);
+    const items = Object.values(state.cart).filter((item) => item.qty > 0);
     if (!items.length) {
       cartListEl.className = "empty";
       cartListEl.textContent = "No items selected.";
@@ -724,8 +858,7 @@
 
     cartListEl.className = "";
     cartListEl.innerHTML = items
-      .map(
-        (item) => `
+      .map((item) => `
         <div class="cart-row">
           <div>
             <strong>${item.name}</strong><br>
@@ -737,8 +870,7 @@
             <button data-op="inc" data-id="${item.id}" type="button">+</button>
           </div>
         </div>
-      `
-      )
+      `)
       .join("");
 
     cartListEl.querySelectorAll("button[data-op]").forEach((btn) => {
@@ -746,9 +878,15 @@
         const id = Number(btn.dataset.id);
         const op = btn.dataset.op;
         if (!state.cart[id]) return;
+        const itemName = state.cart[id].name;
         if (op === "inc") state.cart[id].qty += 1;
         if (op === "dec") state.cart[id].qty -= 1;
-        if (state.cart[id].qty <= 0) delete state.cart[id];
+        if (state.cart[id].qty <= 0) {
+          delete state.cart[id];
+          setStatus(`${itemName} removed from cart.`);
+        } else {
+          setStatus(`${itemName} quantity updated.`);
+        }
         renderCart();
       });
     });
@@ -756,18 +894,90 @@
     updateCartSummary();
   }
 
-  function renderRunningBill(session) {
+  function renderPreparationProgress(session) {
     if (!session || !session.items || !session.items.length) {
-      runningBillEl.innerHTML = "No confirmed order items yet.";
+      progressCardEl.style.display = "none";
       return;
     }
 
-    const lines = session.items.map((item) => {
-      const total = Number(item.price) * Number(item.quantity);
-      return `<div class="line-item">${item.menu_item_name} x ${item.quantity} = Rs.${total.toFixed(2)} (${item.status})</div>`;
-    });
+    const stageWeight = { ordered: 25, preparing: 60, ready: 90, served: 100 };
+    let totalQty = 0;
+    let weightedProgress = 0;
+    let orderedQty = 0;
+    let preparingQty = 0;
+    let readyQty = 0;
+    let servedQty = 0;
+
+    for (const item of session.items) {
+      const qty = Number(item.quantity || 0);
+      const status = normalizeStatus(item.status);
+      totalQty += qty;
+      weightedProgress += qty * (stageWeight[status] || 20);
+      if (status === "ordered") orderedQty += qty;
+      if (status === "preparing") preparingQty += qty;
+      if (status === "ready") readyQty += qty;
+      if (status === "served") servedQty += qty;
+    }
+
+    const percent = totalQty ? Math.round(weightedProgress / totalQty) : 0;
+    progressCardEl.style.display = "grid";
+    progressFillEl.style.width = `${percent}%`;
+    progressPercentEl.textContent = `${percent}%`;
+
+    if (servedQty === totalQty && totalQty > 0) {
+      progressTitleEl.textContent = "All dishes served";
+      progressSubtextEl.textContent = `${servedQty} item(s) served.`;
+      return;
+    }
+    if (readyQty > 0) {
+      progressTitleEl.textContent = "Your dishes are ready";
+      progressSubtextEl.textContent = `${readyQty} ready, ${preparingQty} preparing, ${orderedQty} ordered.`;
+      return;
+    }
+    if (preparingQty > 0) {
+      progressTitleEl.textContent = "Your dishes are preparing";
+      progressSubtextEl.textContent = `${preparingQty} item(s) in kitchen now.`;
+      return;
+    }
+    progressTitleEl.textContent = "Order received by kitchen";
+    progressSubtextEl.textContent = `${orderedQty} item(s) queued.`;
+  }
+
+  function renderRunningBill(session) {
+    if (!session || !session.items || !session.items.length) {
+      runningBillEl.innerHTML = "No confirmed order items yet.";
+      updateRequestBillVisibility(session);
+      renderPreparationProgress(session);
+      return;
+    }
+
+    state.hasPlacedOrder = true;
+    updateRequestBillVisibility(session);
+
+    const orderedItems = session.items.filter((item) => hasOrderedStatus(item.status));
+    const servedItems = session.items.filter((item) => hasServedStatus(item.status));
+
+    const lines = [];
+
+    if (orderedItems.length) {
+      lines.push("<strong>Ordered Items</strong>");
+      for (const item of orderedItems) {
+        const total = Number(item.price) * Number(item.quantity);
+        lines.push(`<div class="line-item">${item.menu_item_name} x ${item.quantity} = Rs.${total.toFixed(2)} (${item.status})</div>`);
+      }
+    }
+
+    if (servedItems.length) {
+      lines.push('<div class="bill-separator"><strong>Served Items</strong></div>');
+      for (const item of servedItems) {
+        const total = Number(item.price) * Number(item.quantity);
+        lines.push(`<div class="line-item">${item.menu_item_name} x ${item.quantity} = Rs.${total.toFixed(2)} (${item.status})</div>`);
+      }
+    }
+
     lines.push(`<hr><strong>Total Spent: Rs.${Number(session.total_amount).toFixed(2)}</strong>`);
     runningBillEl.innerHTML = lines.join("");
+    renderPreparationProgress(session);
   }
 
   function saveSessionId(sessionId) {
@@ -799,7 +1009,7 @@
         restaurant_slug: restaurantSlug,
         table_number: tableNumber,
         qr_token: qrToken,
-        customer_name: customerNameInput.value.trim(),
+        customer_name: state.customerName,
       }),
     });
 
@@ -812,7 +1022,6 @@
     requestBillBtn.disabled = false;
     renderRunningBill(data.session);
     setSessionPill(data.session.status);
-    setStatus(`Session #${state.sessionId} ready. Start ordering.`);
   }
 
   async function ensureSession() {
@@ -826,7 +1035,6 @@
           requestBillBtn.disabled = false;
           renderRunningBill(session);
           setSessionPill(session.status);
-          setStatus(`Session #${state.sessionId} restored. Status: ${session.status}.`);
           return;
         }
         clearSessionId();
@@ -843,7 +1051,6 @@
       requestBillBtn.disabled = false;
       renderRunningBill(openSession);
       setSessionPill(openSession.status);
-      setStatus(`Session #${state.sessionId} restored. Status: ${openSession.status}.`);
       return;
     }
 
@@ -852,16 +1059,18 @@
 
   async function placeOrder() {
     if (!state.sessionId) {
-      setStatus("Session not ready yet.");
+      setStatus("Session not ready yet.", "error");
       return;
     }
 
+    if (!ensureCustomerNameForFirstOrder()) return;
+
     const items = Object.values(state.cart)
-      .filter((x) => x.qty > 0)
-      .map((x) => ({ menu_item_id: x.id, quantity: x.qty }));
+      .filter((item) => item.qty > 0)
+      .map((item) => ({ menu_item_id: item.id, quantity: item.qty }));
 
     if (!items.length) {
-      setStatus("Add at least one item to place order.");
+      setStatus("Add at least one item to place order.", "error");
       return;
     }
 
@@ -870,23 +1079,27 @@
       headers: jsonHeaders(),
       body: JSON.stringify({ items }),
     });
+
     const data = await response.json();
     if (!response.ok) {
-      setStatus(data.detail || "Failed to place order.");
+      setStatus(data.detail || "Failed to place order.", "error");
       return;
     }
 
+    state.hasPlacedOrder = true;
+    updateRequestBillVisibility(data.session);
     setStatus(`${data.message} Bill total: Rs.${data.session.total_amount}`);
     setSessionPill(data.session.status);
     renderRunningBill(data.session);
     state.cart = {};
     renderCart();
+    renderMenu();
     closeCart();
   }
 
   async function requestBill() {
     if (!state.sessionId) {
-      setStatus("Session not ready yet.");
+      setStatus("Session not ready yet.", "error");
       return;
     }
 
@@ -896,7 +1109,7 @@
     });
     const data = await response.json();
     if (!response.ok) {
-      setStatus(data.detail || "Failed to request bill.");
+      setStatus(data.detail || "Failed to request bill.", "error");
       return;
     }
 
@@ -913,7 +1126,6 @@
       renderRunningBill(session);
       if (["closed", "cancelled"].includes(session.status)) {
         clearSessionId();
-        setStatus(`Session ${session.status}. Start a new one for fresh orders.`);
         placeOrderBtn.disabled = true;
         requestBillBtn.disabled = true;
       }
@@ -933,9 +1145,16 @@
     else openCart();
   }
 
-  toggleCartBtn.addEventListener("click", toggleCart);
   headerCartBtn.addEventListener("click", toggleCart);
   closeCartBtn.addEventListener("click", closeCart);
+  profileBtn.addEventListener("click", () => {
+    const updated = window.prompt("Update customer name:", state.customerName || "");
+    if (updated === null) return;
+    state.customerName = updated.trim();
+    saveCustomerName(state.customerName);
+    setCustomerChip();
+    setStatus("Profile updated.");
+  });
 
   searchInput.addEventListener("input", () => {
     state.search = searchInput.value;
@@ -947,10 +1166,11 @@
   placeOrderBtn.addEventListener("click", placeOrder);
   requestBillBtn.addEventListener("click", requestBill);
 
+  loadCustomerName();
   renderTabs();
   renderMenu();
   renderCart();
-  ensureSession().catch((err) => setStatus(err.message));
+  ensureSession().catch((err) => setStatus(err.message, "error"));
   setInterval(refreshSessionStatus, 5000);
 </script>
 {% endblock %}
