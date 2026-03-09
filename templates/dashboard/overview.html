@@ -7,6 +7,9 @@
   .admin-side h3 { margin: 0 0 12px; font-size: 20px; }
   .admin-side a { display:block; color:#cbd5e1; text-decoration:none; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
   .admin-side a.active { background:#334155; color:#fff; font-weight:700; }
+  .side-footer { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(203,213,225,.25); }
+  .logout-form { margin:0; }
+  .logout-btn { width:100%; border:1px solid rgba(203,213,225,.45); background:rgba(203,213,225,.12); color:#fff; border-radius:8px; padding:10px 12px; font-weight:700; cursor:pointer; }
   .admin-main { display:grid; gap:14px; }
   .panel { background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:14px; }
   .panel h2 { margin-top:0; }
@@ -39,6 +42,12 @@
     <a href="?section=payments" class="{% if section == 'payments' %}active{% endif %}">7. Payment Management</a>
     <a href="?section=reports" class="{% if section == 'reports' %}active{% endif %}">8. Reports & Analytics</a>
     <a href="?section=qr" class="{% if section == 'qr' %}active{% endif %}">9. QR Management</a>
+    <div class="side-footer">
+      <form class="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="logout-btn" type="submit">Logout</button>
+      </form>
+    </div>
   </aside>
 
   <section class="admin-main">
