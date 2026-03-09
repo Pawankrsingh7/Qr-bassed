@@ -2,219 +2,777 @@
 {% block title %}Cashier Dashboard{% endblock %}
 {% block content %}
 <style>
-  .layout { display:grid; grid-template-columns: 240px 1fr; gap:16px; }
-  .side { background: linear-gradient(180deg,#0ea5e9,#0369a1); border-radius: 12px; padding: 16px; color:#fff; }
-  .side a { display:block; color:#fff; text-decoration:none; padding:10px 12px; border-radius:8px; margin-bottom:8px; }
-  .side a.active { background: rgba(255,255,255,0.2); font-weight:700; }
-  .card2 { border:1px solid #e5e7eb; border-radius:10px; padding:14px; background:#fff; margin-bottom:16px; }
-  table { width:100%; border-collapse: collapse; }
-  th, td { border-bottom:1px solid #e5e7eb; text-align:left; padding:8px; }
-  .grid2 { display:grid; gap:12px; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); }
+  .nav { display: none; }
+
+  :root {
+    --bg: #f3f6fb;
+    --panel: #ffffff;
+    --line: #dce4ef;
+    --text: #10243e;
+    --muted: #5a6c82;
+    --nav-a: #10365f;
+    --nav-b: #1d5f8d;
+    --accent: #0d7a3d;
+    --accent-dark: #0a5e2f;
+    --danger: #c81e1e;
+    --warning: #dc8a00;
+    --soft: #edf3fb;
+  }
+
+  .container {
+    max-width: 1360px;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 8px;
+  }
+
+  .cashier-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 14px;
+  }
+
+  .cashier-side {
+    background:
+      radial-gradient(1200px 320px at -20% -30%, rgba(255, 255, 255, 0.28), transparent 35%),
+      linear-gradient(180deg, var(--nav-b), var(--nav-a));
+    color: #fff;
+    border-radius: 14px;
+    padding: 18px 14px;
+    min-height: calc(100dvh - 40px);
+    position: sticky;
+    top: 16px;
+  }
+
+  .cashier-logo {
+    font-size: 19px;
+    font-weight: 800;
+    margin: 0 0 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .cashier-sub {
+    margin: 0 0 16px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .side-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.24);
+  }
+
+  .logout-form {
+    margin: 0;
+  }
+
+  .logout-btn {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-weight: 800;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+
+  .nav-links {
+    display: grid;
+    gap: 8px;
+  }
+
+  .nav-link {
+    text-decoration: none;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    font-weight: 700;
+    font-size: 13px;
+    transition: transform .18s ease, background .18s ease, border-color .18s ease;
+  }
+
+  .nav-link:hover {
+    transform: translateX(3px);
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .nav-link.active {
+    background: #fff;
+    color: #123f67;
+    border-color: #fff;
+  }
+
+  .content {
+    display: grid;
+    gap: 12px;
+  }
+
+  .topbar {
+    border-radius: 14px;
+    background: linear-gradient(120deg, #0c355f, #1f74a8);
+    color: #fff;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .topbar h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.05;
+  }
+
+  .topbar p {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14px;
+  }
+
+  .date-chip {
+    border-radius: 999px;
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .topbar-right {
+    display: grid;
+    justify-items: end;
+    gap: 6px;
+  }
+
+  .user-chip {
+    border-radius: 999px;
+    padding: 6px 11px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .flash-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .flash {
+    border: 1px solid #bad8ff;
+    border-left: 5px solid #1e61b6;
+    border-radius: 10px;
+    background: #edf5ff;
+    color: #153e75;
+    padding: 10px 12px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .panel h2,
+  .panel h3 {
+    margin: 0 0 10px;
+    color: var(--text);
+  }
+
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .metric {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    background: linear-gradient(180deg, #fff, #f9fbff);
+  }
+
+  .metric-label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .metric-value {
+    color: var(--text);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 12px;
+  }
+
+  .stack {
+    display: grid;
+    gap: 12px;
+  }
+
+  .form-row {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    align-items: end;
+  }
+
+  .field {
+    display: grid;
+    gap: 6px;
+  }
+
+  .field label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 700;
+  }
+
+  input, select, button {
+    font: inherit;
+  }
+
+  input[type="text"], input[type="number"], input[type="date"], select {
+    width: 100%;
+    border: 1px solid #cfd8e3;
+    border-radius: 8px;
+    padding: 8px 10px;
+    background: #fff;
+    color: var(--text);
+  }
+
+  .btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    color: #fff;
+    background: linear-gradient(180deg, #1f74a8, #155a89);
+  }
+
+  .btn-success {
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent), var(--accent-dark));
+  }
+
+  .btn-danger {
+    color: #fff;
+    background: linear-gradient(180deg, #dc2626, #b91c1c);
+  }
+
+  .btn-soft {
+    color: #173a63;
+    background: var(--soft);
+    border: 1px solid #d8e5f6;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    color: #355170;
+    background: #f4f8fe;
+    border-bottom: 1px solid var(--line);
+    padding: 9px 8px;
+    font-weight: 800;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    border-bottom: 1px solid #edf2f7;
+    padding: 9px 8px;
+    color: #20364f;
+    vertical-align: top;
+  }
+
+  .table-wrap {
+    max-height: 380px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .status-chip {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1px solid #cfd8e3;
+    background: #f8fafc;
+    color: #24364a;
+  }
+
+  .totals {
+    display: grid;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .total-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 14px;
+    color: #304962;
+  }
+
+  .total-row strong {
+    color: #0e2a47;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .links a {
+    text-decoration: none;
+    padding: 7px 10px;
+    border-radius: 8px;
+    background: #edf3fb;
+    color: #144067;
+    border: 1px solid #d5e1f0;
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  @media (max-width: 1160px) {
+    .cashier-layout {
+      grid-template-columns: 1fr;
+    }
+    .cashier-side {
+      min-height: auto;
+      position: static;
+    }
+    .metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .container {
+      margin-top: 0;
+    }
+    .topbar h1 {
+      font-size: 26px;
+    }
+    .metrics {
+      grid-template-columns: 1fr;
+    }
+    .cashier-side {
+      border-radius: 0;
+    }
+  }
 </style>
 
 {% if messages %}
-  {% for message in messages %}
-    <div class="card2" style="border-left:4px solid #0ea5e9;">{{ message }}</div>
-  {% endfor %}
+  <div class="flash-list">
+    {% for message in messages %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+  </div>
 {% endif %}
 
-<div class="layout">
-  <aside class="side">
-    <h3>Cashier Panel</h3>
-    <a href="?section=billing" class="{% if section == 'billing' %}active{% endif %}">1) Billing System</a>
-    <a href="?section=table_status" class="{% if section == 'table_status' %}active{% endif %}">2) Table Status</a>
-    <a href="?section=daily_sales" class="{% if section == 'daily_sales' %}active{% endif %}">3) Daily Sales Dashboard</a>
-    <a href="?section=order_history" class="{% if section == 'order_history' %}active{% endif %}">4) Order History</a>
+<div class="cashier-layout">
+  <aside class="cashier-side">
+    <h2 class="cashier-logo">Cashier Console</h2>
+    <p class="cashier-sub">Billing, payments, table visibility and sales reporting.</p>
+    <nav class="nav-links">
+      <a href="?section=billing" class="nav-link {% if section == 'billing' %}active{% endif %}">Billing System</a>
+      <a href="?section=table_status" class="nav-link {% if section == 'table_status' %}active{% endif %}">Table Status</a>
+      <a href="?section=daily_sales" class="nav-link {% if section == 'daily_sales' %}active{% endif %}">Daily Sales</a>
+      <a href="?section=order_history" class="nav-link {% if section == 'order_history' %}active{% endif %}">Order History</a>
+    </nav>
+    <div class="side-footer">
+      <form class="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="logout-btn" type="submit">Logout</button>
+      </form>
+    </div>
   </aside>
 
-  <section>
-    {% if section == 'billing' %}
-      <div class="card2">
-        <h2>Billing System</h2>
-        <p class="muted">Automatic bill generation, GST/discount/coupon/split and payment marking.</p>
+  <section class="content">
+    <header class="topbar">
+      <div>
+        <h1>Cashier Dashboard</h1>
+        <p>Professional billing and payment management for live tables.</p>
       </div>
+      <div class="topbar-right">
+        <div class="user-chip">User ID: {{ request.user.username }}</div>
+        <div class="date-chip">{% now "d M Y" %}</div>
+      </div>
+    </header>
 
-      <div class="card2">
-        <form method="get">
+    {% if section == 'billing' %}
+      <article class="panel">
+        <h2>Billing System</h2>
+        <p class="sub">Generate bills, adjust taxes/discounts, split totals, print invoices and close payments.</p>
+      </article>
+
+      <article class="panel">
+        <form method="get" class="form-row">
           <input type="hidden" name="section" value="billing">
-          <label><strong>Select Session:</strong></label>
-          <select name="session_id">
-            {% for s in active_bill_sessions %}
-              <option value="{{ s.id }}" {% if selected_session and s.id == selected_session.id %}selected{% endif %}>#{{ s.id }} | Table {{ s.table.table_number }} | {{ s.customer_name|default:"Guest" }} | {{ s.status }}</option>
-            {% endfor %}
-          </select>
-          <button type="submit">Load Bill</button>
+          <div class="field" style="grid-column: span 2;">
+            <label>Select Session</label>
+            <select name="session_id">
+              {% for s in active_bill_sessions %}
+                <option value="{{ s.id }}" {% if selected_session and s.id == selected_session.id %}selected{% endif %}>
+                  #{{ s.id }} | Table {{ s.table.table_number }} | {{ s.customer_name|default:"Guest" }} | {{ s.status }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-primary" type="submit">Load Bill</button>
         </form>
-      </div>
+      </article>
 
       {% if selected_session %}
-      <div class="card2">
-        <h3>Bill Details - Session #{{ selected_session.id }}</h3>
-        <p><strong>Customer:</strong> {{ selected_session.customer_name|default:"Guest" }} | <strong>Table:</strong> {{ selected_session.table.table_number }}</p>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">Session</div>
+            <div class="metric-value">#{{ selected_session.id }}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Table</div>
+            <div class="metric-value">{{ selected_session.table.table_number }}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Customer</div>
+            <div class="metric-value" style="font-size:20px; line-height:1.2;">{{ selected_session.customer_name|default:"Guest" }}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Status</div>
+            <div class="metric-value" style="font-size:20px; line-height:1.2; text-transform:capitalize;">{{ selected_session.status }}</div>
+          </div>
+        </div>
 
-        <table>
-          <thead><tr><th>Item</th><th>Qty</th><th>Price</th><th>Line</th><th>Action</th></tr></thead>
-          <tbody>
-            {% for item in bill_items %}
-            <tr>
-              <td>{{ item.menu_item.name }}</td><td>{{ item.quantity }}</td><td>{{ item.price }}</td><td>{{ item.quantity|floatformat:0|add:"0" }} x {{ item.price }}</td>
-              <td>
-                <form method="post" style="display:inline;">
+        <div class="grid-2">
+          <div class="stack">
+            <article class="panel">
+              <h3>Bill Items</h3>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Item</th><th>Qty</th><th>Price</th><th>Line</th><th>Action</th></tr>
+                  </thead>
+                  <tbody>
+                    {% for item in bill_items %}
+                      <tr>
+                        <td>{{ item.menu_item.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.quantity }} x {{ item.price }}</td>
+                        <td>
+                          <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove_item">
+                            <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+                            <input type="hidden" name="order_item_id" value="{{ item.id }}">
+                            <button class="btn btn-danger" type="submit">Remove</button>
+                          </form>
+                        </td>
+                      </tr>
+                    {% empty %}
+                      <tr><td colspan="5">No items in bill.</td></tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </article>
+
+            <article class="panel">
+              <h3>Add Item To Bill</h3>
+              <form method="post" class="form-row">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_item">
+                <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+                <div class="field" style="grid-column: span 2;">
+                  <label>Menu Item</label>
+                  <select name="menu_item_id">
+                    {% for m in all_available_menu_items %}
+                      <option value="{{ m.id }}">{{ m.restaurant.name }} - {{ m.name }} ({{ m.price }})</option>
+                    {% endfor %}
+                  </select>
+                </div>
+                <div class="field">
+                  <label>Quantity</label>
+                  <input type="number" name="quantity" min="1" value="1">
+                </div>
+                <button class="btn btn-primary" type="submit">Add Item</button>
+              </form>
+            </article>
+          </div>
+
+          <div class="stack">
+            <article class="panel">
+              <h3>Billing Controls</h3>
+              <form method="post" class="form-row">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_billing">
+                <input type="hidden" name="session_id" value="{{ selected_session.id }}">
+                <div class="field">
+                  <label>GST %</label>
+                  <input type="number" step="0.01" name="gst_percent" value="{{ bill_summary.billing.gst_percent }}">
+                </div>
+                <div class="field">
+                  <label>Discount Amount</label>
+                  <input type="number" step="0.01" name="discount_amount" value="{{ bill_summary.billing.discount_amount }}">
+                </div>
+                <div class="field">
+                  <label>Coupon Code</label>
+                  <input type="text" name="coupon_code" value="{{ bill_summary.billing.coupon_code }}" placeholder="SAVE10 / FLAT50 / WELCOME">
+                </div>
+                <div class="field">
+                  <label>Split Bill Count</label>
+                  <input type="number" min="1" name="split_count" value="{{ bill_summary.billing.split_count }}">
+                </div>
+                <button class="btn btn-soft" type="submit">Apply Rules</button>
+              </form>
+            </article>
+
+            <article class="panel">
+              <h3>Computed Total</h3>
+              <div class="totals">
+                <div class="total-row"><span>Subtotal</span><strong>{{ bill_summary.subtotal }}</strong></div>
+                <div class="total-row"><span>GST</span><strong>{{ bill_summary.gst_amount }}</strong></div>
+                <div class="total-row"><span>Discount</span><strong>{{ bill_summary.discount_amount }}</strong></div>
+                <div class="total-row"><span>Coupon ({{ bill_summary.coupon_code|default:"-" }})</span><strong>{{ bill_summary.coupon_discount_amount }}</strong></div>
+                <div class="total-row"><span>Split</span><strong>{{ bill_summary.split_count }} person(s)</strong></div>
+                <div class="total-row"><span>Per Person</span><strong>{{ bill_summary.per_person }}</strong></div>
+                <div class="total-row" style="border-top:1px solid var(--line); padding-top:8px;">
+                  <span style="font-size:16px;">Final Total</span>
+                  <strong style="font-size:18px;">{{ bill_summary.final_total }}</strong>
+                </div>
+              </div>
+
+              <div class="links">
+                <a href="/dashboard/sessions/{{ selected_session.id }}/print-bill/" target="_blank">Print Invoice</a>
+                <a href="/cashier/invoice/{{ selected_session.id }}/pdf/" target="_blank">Download PDF</a>
+              </div>
+
+              {% if selected_session.status == 'payment_requested' %}
+                <form method="post" class="form-row" style="margin-top:12px;">
                   {% csrf_token %}
-                  <input type="hidden" name="action" value="remove_item">
+                  <input type="hidden" name="action" value="mark_payment_done">
                   <input type="hidden" name="session_id" value="{{ selected_session.id }}">
-                  <input type="hidden" name="order_item_id" value="{{ item.id }}">
-                  <button type="submit">Remove</button>
+                  <div class="field">
+                    <label>Payment Method</label>
+                    <select name="payment_method">
+                      <option value="cash">Cash</option>
+                      <option value="upi">UPI</option>
+                      <option value="card">Card</option>
+                    </select>
+                  </div>
+                  <button class="btn btn-success" type="submit">Mark Payment Done</button>
                 </form>
-              </td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="5">No items in bill.</td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="card2">
-        <h3>Add Item to Bill</h3>
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="add_item">
-          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
-          <select name="menu_item_id">
-            {% for m in all_available_menu_items %}
-              <option value="{{ m.id }}">{{ m.restaurant.name }} - {{ m.name }} ({{ m.price }})</option>
-            {% endfor %}
-          </select>
-          <input type="number" name="quantity" min="1" value="1">
-          <button type="submit">Add Item</button>
-        </form>
-      </div>
-
-      <div class="card2">
-        <h3>GST / Discount / Coupon / Split</h3>
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="update_billing">
-          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
-          <label>GST %</label>
-          <input type="number" step="0.01" name="gst_percent" value="{{ bill_summary.billing.gst_percent }}">
-          <label>Discount Amount</label>
-          <input type="number" step="0.01" name="discount_amount" value="{{ bill_summary.billing.discount_amount }}">
-          <label>Coupon Code</label>
-          <input type="text" name="coupon_code" value="{{ bill_summary.billing.coupon_code }}" placeholder="SAVE10 / FLAT50 / WELCOME">
-          <label>Split Bill Count</label>
-          <input type="number" min="1" name="split_count" value="{{ bill_summary.billing.split_count }}">
-          <button type="submit">Apply</button>
-        </form>
-      </div>
-
-      <div class="card2">
-        <h3>Computed Total</h3>
-        <p>Subtotal: {{ bill_summary.subtotal }}</p>
-        <p>GST: {{ bill_summary.gst_amount }}</p>
-        <p>Discount: {{ bill_summary.discount_amount }}</p>
-        <p>Coupon ({{ bill_summary.coupon_code|default:"-" }}): {{ bill_summary.coupon_discount_amount }}</p>
-        <p><strong>Final Total: {{ bill_summary.final_total }}</strong></p>
-        <p>Split: {{ bill_summary.split_count }} | Per Person: {{ bill_summary.per_person }}</p>
-
-        <p>
-          <a href="/dashboard/sessions/{{ selected_session.id }}/print-bill/" target="_blank">Print Invoice</a> |
-          <a href="/cashier/invoice/{{ selected_session.id }}/pdf/" target="_blank">Download PDF</a>
-        </p>
-
-        {% if selected_session.status == 'payment_requested' %}
-        <form method="post">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="mark_payment_done">
-          <input type="hidden" name="session_id" value="{{ selected_session.id }}">
-          <label>Payment Method</label>
-          <select name="payment_method">
-            <option value="cash">Cash</option>
-            <option value="upi">UPI</option>
-            <option value="card">Card</option>
-          </select>
-          <button type="submit">Mark Payment Done</button>
-        </form>
-        {% endif %}
-      </div>
+              {% endif %}
+            </article>
+          </div>
+        </div>
       {% else %}
-      <div class="card2">No bill-request sessions available.</div>
+        <article class="panel">
+          <h3>No Billing Queue</h3>
+          <p class="sub">No sessions are currently waiting for billing or payment.</p>
+        </article>
       {% endif %}
 
     {% elif section == 'table_status' %}
-      <div class="card2">
+      <article class="panel">
         <h2>Table Status</h2>
-        <div class="grid2">
-          <div class="card2"><strong>Available</strong><p>{{ table_status.available }}</p></div>
-          <div class="card2"><strong>Occupied</strong><p>{{ table_status.occupied }}</p></div>
-          <div class="card2"><strong>Reserved</strong><p>{{ table_status.reserved }}</p></div>
+        <p class="sub">Monitor availability and current order sessions.</p>
+      </article>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Available</div>
+          <div class="metric-value">{{ table_status.available }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Occupied</div>
+          <div class="metric-value">{{ table_status.occupied }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Reserved</div>
+          <div class="metric-value">{{ table_status.reserved }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Tracked Sessions</div>
+          <div class="metric-value">{{ table_orders|length }}</div>
         </div>
       </div>
-      <div class="card2">
+
+      <article class="panel">
         <h3>Table Orders</h3>
-        <table>
-          <thead><tr><th>Session</th><th>Table</th><th>Customer</th><th>Status</th><th>Total</th></tr></thead>
-          <tbody>
-            {% for s in table_orders %}
-            <tr><td>#{{ s.id }}</td><td>{{ s.table.table_number }}</td><td>{{ s.customer_name|default:"Guest" }}</td><td>{{ s.status }}</td><td>{{ s.total_amount }}</td></tr>
-            {% empty %}<tr><td colspan="5">No table orders.</td></tr>{% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Session</th><th>Table</th><th>Customer</th><th>Status</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+              {% for s in table_orders %}
+                <tr>
+                  <td>#{{ s.id }}</td>
+                  <td>{{ s.table.table_number }}</td>
+                  <td>{{ s.customer_name|default:"Guest" }}</td>
+                  <td><span class="status-chip">{{ s.status }}</span></td>
+                  <td>{{ s.total_amount }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5">No table orders.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
 
     {% elif section == 'daily_sales' %}
-      <div class="card2">
+      <article class="panel">
         <h2>Daily Sales Dashboard</h2>
-        <div class="grid2">
-          <div class="card2"><strong>Total Sales Today</strong><p>{{ total_sales_today }}</p></div>
-          <div class="card2"><strong>Total Orders Today</strong><p>{{ total_orders_today }}</p></div>
-          <div class="card2"><strong>Cash Sales</strong><p>{{ cash_sales }}</p></div>
-          <div class="card2"><strong>Online Sales</strong><p>{{ online_sales }}</p></div>
-          <div class="card2"><strong>Peak Order Time</strong><p>{% if peak_order %}{{ peak_order.hour }}:00{% else %}-{% endif %}</p></div>
+        <p class="sub">Revenue and payment method distribution for today.</p>
+      </article>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Total Sales</div>
+          <div class="metric-value">{{ total_sales_today }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Total Orders</div>
+          <div class="metric-value">{{ total_orders_today }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Cash Sales</div>
+          <div class="metric-value">{{ cash_sales }}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Online Sales</div>
+          <div class="metric-value">{{ online_sales }}</div>
         </div>
       </div>
-      <div class="card2">
-        <h3>Most Sold Food Items (Today)</h3>
-        <table>
-          <thead><tr><th>Item</th><th>Qty</th></tr></thead>
-          <tbody>
-            {% for row in most_sold_items %}
-            <tr><td>{{ row.menu_item__name }}</td><td>{{ row.total_qty }}</td></tr>
-            {% empty %}<tr><td colspan="2">No sales yet.</td></tr>{% endfor %}
-          </tbody>
-        </table>
-      </div>
+
+      <article class="panel">
+        <h3>Performance Breakdown</h3>
+        <div class="form-row">
+          <div class="metric">
+            <div class="metric-label">Peak Order Time</div>
+            <div class="metric-value" style="font-size:22px;">
+              {% if peak_order %}{{ peak_order.hour }}:00{% else %}-{% endif %}
+            </div>
+          </div>
+          <div class="metric" style="grid-column: span 2;">
+            <div class="metric-label">Most Sold Food Items</div>
+            <div class="table-wrap" style="max-height:260px;">
+              <table>
+                <thead><tr><th>Item</th><th>Qty</th></tr></thead>
+                <tbody>
+                  {% for row in most_sold_items %}
+                    <tr><td>{{ row.menu_item__name }}</td><td>{{ row.total_qty }}</td></tr>
+                  {% empty %}
+                    <tr><td colspan="2">No sales yet.</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </article>
 
     {% elif section == 'order_history' %}
-      <div class="card2">
+      <article class="panel">
         <h2>Order History</h2>
-        <form method="get">
+        <p class="sub">Search old sessions by date, order id, and table number.</p>
+      </article>
+
+      <article class="panel">
+        <form method="get" class="form-row">
           <input type="hidden" name="section" value="order_history">
-          <label>Date</label><input type="date" name="filter_date" value="{{ filter_date }}">
-          <label>Order ID</label><input type="number" name="filter_order_id" value="{{ filter_order_id }}">
-          <label>Table Number</label><input type="number" name="filter_table" value="{{ filter_table }}">
-          <button type="submit">Search</button>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" name="filter_date" value="{{ filter_date }}">
+          </div>
+          <div class="field">
+            <label>Order ID</label>
+            <input type="number" name="filter_order_id" value="{{ filter_order_id }}">
+          </div>
+          <div class="field">
+            <label>Table Number</label>
+            <input type="number" name="filter_table" value="{{ filter_table }}">
+          </div>
+          <button class="btn btn-primary" type="submit">Search</button>
         </form>
-      </div>
-      <div class="card2">
-        <table>
-          <thead><tr><th>Order ID</th><th>Date</th><th>Table</th><th>Status</th><th>Total</th><th>Invoice</th></tr></thead>
-          <tbody>
-            {% for s in history_qs %}
-            <tr>
-              <td>#{{ s.id }}</td><td>{{ s.created_at }}</td><td>{{ s.table.table_number }}</td><td>{{ s.status }}</td><td>{{ s.total_amount }}</td>
-              <td><a href="/dashboard/sessions/{{ s.id }}/print-bill/" target="_blank">View Invoice</a></td>
-            </tr>
-            {% empty %}<tr><td colspan="6">No orders found.</td></tr>{% endfor %}
-          </tbody>
-        </table>
-      </div>
+      </article>
+
+      <article class="panel">
+        <div class="table-wrap" style="max-height:460px;">
+          <table>
+            <thead>
+              <tr><th>Order ID</th><th>Date</th><th>Table</th><th>Status</th><th>Total</th><th>Invoice</th></tr>
+            </thead>
+            <tbody>
+              {% for s in history_qs %}
+                <tr>
+                  <td>#{{ s.id }}</td>
+                  <td>{{ s.created_at }}</td>
+                  <td>{{ s.table.table_number }}</td>
+                  <td><span class="status-chip">{{ s.status }}</span></td>
+                  <td>{{ s.total_amount }}</td>
+                  <td><a href="/dashboard/sessions/{{ s.id }}/print-bill/" target="_blank">View Invoice</a></td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6">No orders found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </article>
     {% endif %}
   </section>
 </div>
 
 <script>
-  setTimeout(function(){ window.location.reload(); }, 5000);
+  setTimeout(function () {
+    window.location.reload();
+  }, 7000);
 </script>
 {% endblock %}

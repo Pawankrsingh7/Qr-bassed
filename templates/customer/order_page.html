@@ -208,6 +208,7 @@
     display: grid;
     grid-template-columns: 104px 1fr;
     min-height: 118px;
+    transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
   }
 
   .food-media {
@@ -216,6 +217,7 @@
     min-height: 118px;
     object-fit: cover;
     border-right: 1px solid var(--line);
+    transition: transform .28s ease;
   }
 
   .food-fallback {
@@ -229,6 +231,18 @@
     font-weight: 700;
     letter-spacing: 0.5px;
     font-size: 12px;
+    transition: transform .28s ease;
+  }
+
+  .food-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 22px rgba(16, 24, 40, 0.12);
+    border-color: #d0d5dd;
+  }
+
+  .food-card:hover .food-media,
+  .food-card:hover .food-fallback {
+    transform: scale(1.07);
   }
 
   .food-body {
@@ -293,10 +307,34 @@
     cursor: pointer;
     font-size: 13px;
     white-space: nowrap;
+    transition: transform .12s ease, box-shadow .18s ease, filter .18s ease;
+    box-shadow: 0 4px 10px rgba(15, 122, 51, 0.25);
+    will-change: transform;
   }
 
   .add-btn.full {
     width: 126px;
+  }
+
+  .add-btn:hover {
+    filter: brightness(1.03);
+    transform: translateY(-1px);
+    box-shadow: 0 7px 16px rgba(15, 122, 51, 0.32);
+  }
+
+  .add-btn:active {
+    transform: scale(0.96);
+    box-shadow: 0 2px 7px rgba(15, 122, 51, 0.3);
+  }
+
+  .add-btn.clicked {
+    animation: add-btn-pop .24s ease-out;
+  }
+
+  @keyframes add-btn-pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(0.94); }
+    100% { transform: scale(1); }
   }
 
   .inline-qty {
@@ -818,6 +856,10 @@
 
     menuRoot.querySelectorAll(".add-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
+        btn.classList.remove("clicked");
+        void btn.offsetWidth;
+        btn.classList.add("clicked");
+
         const id = Number(btn.dataset.itemId);
         const name = btn.dataset.itemName;
         const price = Number(btn.dataset.itemPrice);
@@ -825,6 +867,10 @@
         state.cart[id].qty += getDraftQty(id);
         renderCart();
         setStatus(`${name} added to cart.`);
+
+        window.setTimeout(() => {
+          btn.classList.remove("clicked");
+        }, 260);
       });
     });
 

@@ -1,66 +1,472 @@
 {% extends "base.html" %}
 {% block title %}Kitchen Dashboard{% endblock %}
 {% block content %}
-<h1>Kitchen Dashboard</h1>
-<p class="muted">Approved orders appear here for preparation.</p>
+<style>
+  .nav { display: none; }
+
+  :root {
+    --bg: #f2f6fb;
+    --panel: #fff;
+    --line: #dbe4ef;
+    --text: #10243e;
+    --muted: #5a6c82;
+    --nav-a: #172437;
+    --nav-b: #213553;
+    --accent: #0f7a3d;
+    --accent-dark: #0b5f30;
+    --warn: #b45309;
+    --info: #1d4ed8;
+  }
+
+  .container {
+    max-width: 1360px;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+    margin-top: 8px;
+  }
+
+  .k-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 14px;
+  }
+
+  .k-side {
+    background:
+      radial-gradient(1200px 320px at -20% -30%, rgba(255, 255, 255, 0.18), transparent 34%),
+      linear-gradient(180deg, var(--nav-b), var(--nav-a));
+    color: #fff;
+    border-radius: 14px;
+    padding: 18px 14px;
+    min-height: calc(100dvh - 40px);
+    position: sticky;
+    top: 16px;
+  }
+
+  .k-side h2 {
+    margin: 0 0 4px;
+    font-size: 20px;
+    letter-spacing: 0.3px;
+  }
+
+  .k-side p {
+    margin: 0 0 16px;
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 12px;
+  }
+
+  .k-nav {
+    display: grid;
+    gap: 8px;
+  }
+
+  .k-nav a {
+    text-decoration: none;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .side-footer {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.24);
+  }
+
+  .logout-form {
+    margin: 0;
+  }
+
+  .logout-btn {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.36);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    font-weight: 800;
+    padding: 10px 12px;
+    cursor: pointer;
+  }
+
+  .k-main {
+    display: grid;
+    gap: 12px;
+  }
+
+  .topbar {
+    border-radius: 14px;
+    background: linear-gradient(120deg, #162132, #2f4b70);
+    color: #fff;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .topbar h1 {
+    margin: 0;
+    font-size: 32px;
+    line-height: 1.05;
+  }
+
+  .topbar p {
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.86);
+  }
+
+  .chip {
+    border-radius: 999px;
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  .flash-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .flash {
+    border: 1px solid #b9d8ff;
+    border-left: 5px solid #1d4ed8;
+    border-radius: 10px;
+    background: #eef4ff;
+    color: #153e75;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .metric {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    background: linear-gradient(180deg, #fff, #f9fbff);
+  }
+
+  .metric .label {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .metric .value {
+    color: var(--text);
+    font-size: 30px;
+    line-height: 1;
+    font-weight: 800;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .panel h2,
+  .panel h3 {
+    margin: 0 0 10px;
+    color: var(--text);
+  }
+
+  .sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .table-wrap {
+    max-height: 390px;
+    overflow: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    color: #355170;
+    background: #f4f8fe;
+    border-bottom: 1px solid var(--line);
+    padding: 9px 8px;
+    font-weight: 800;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  td {
+    border-bottom: 1px solid #edf2f7;
+    padding: 9px 8px;
+    color: #20364f;
+    vertical-align: top;
+  }
+
+  .status-chip {
+    display: inline-block;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 800;
+    border: 1px solid #cfd8e3;
+    background: #f8fafc;
+    color: #24364a;
+    text-transform: capitalize;
+  }
+
+  .status-chip.ordered { color: #7c2d12; background: #fff7ed; border-color: #fed7aa; }
+  .status-chip.preparing { color: #854d0e; background: #fffbeb; border-color: #fde68a; }
+  .status-chip.ready { color: #166534; background: #f0fdf4; border-color: #bbf7d0; }
+  .status-chip.served { color: #1e40af; background: #eff6ff; border-color: #bfdbfe; }
+
+  .btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 11px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    color: #fff;
+    white-space: nowrap;
+  }
+
+  .btn-start { background: linear-gradient(180deg, #d97706, #b45309); }
+  .btn-ready { background: linear-gradient(180deg, var(--accent), var(--accent-dark)); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .pager {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .pager a,
+  .pager span {
+    font-size: 12px;
+    text-decoration: none;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 5px 9px;
+    color: #26415f;
+    background: #fff;
+    font-weight: 700;
+  }
+
+  .pager .current {
+    background: #eef4ff;
+    border-color: #c8dafc;
+  }
+
+  @media (max-width: 1160px) {
+    .k-layout { grid-template-columns: 1fr; }
+    .k-side { min-height: auto; position: static; }
+    .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 700px) {
+    .container { margin-top: 0; }
+    .k-side { border-radius: 0; }
+    .topbar h1 { font-size: 26px; }
+    .metrics { grid-template-columns: 1fr; }
+  }
+</style>
 
 {% if messages %}
-  {% for message in messages %}
-    <div class="card" style="border-left:4px solid #2563eb; margin-bottom:12px;">{{ message }}</div>
-  {% endfor %}
+  <div class="flash-list">
+    {% for message in messages %}
+      <div class="flash">{{ message }}</div>
+    {% endfor %}
+  </div>
 {% endif %}
 
-<div class="card">
-  <h3>Preparation Queue</h3>
-  <table style="width:100%; border-collapse: collapse;">
-    <thead>
-      <tr>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Session</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Customer</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Table</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Menu Item</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Qty</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Status</th>
-        <th style="text-align:left; border-bottom:1px solid #e5e7eb; padding:8px;">Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for item in queue_items %}
-      <tr>
-        <td style="padding:8px;">#{{ item.session.id }}</td>
-        <td style="padding:8px;">{{ item.session.customer_name|default:"Guest" }}</td>
-        <td style="padding:8px;">{{ item.session.table.table_number }}</td>
-        <td style="padding:8px;">{{ item.menu_item.name }}</td>
-        <td style="padding:8px;">{{ item.quantity }}</td>
-        <td style="padding:8px;">{{ item.status }}</td>
-        <td style="padding:8px;">
-          {% if item.status == 'ordered' %}
-          <form method="post" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_item_status">
-            <input type="hidden" name="item_id" value="{{ item.id }}">
-            <input type="hidden" name="next_status" value="preparing">
-            <button type="submit">Start Preparing</button>
-          </form>
-          {% elif item.status == 'preparing' %}
-          <form method="post" style="display:inline;">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_item_status">
-            <input type="hidden" name="item_id" value="{{ item.id }}">
-            <input type="hidden" name="next_status" value="ready">
-            <button type="submit">Mark Ready</button>
-          </form>
-          {% else %}
-          Ready for waiter pickup
+<div class="k-layout">
+  <aside class="k-side">
+    <h2>Kitchen Console</h2>
+    <p>Track live queue and push food status updates quickly.</p>
+    <div class="k-nav">
+      <a href="#queue">Preparation Queue</a>
+      <a href="#history">Prepared Items History</a>
+    </div>
+    <div class="side-footer">
+      <form class="logout-form" method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button class="logout-btn" type="submit">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <section class="k-main">
+    <header class="topbar">
+      <div>
+        <h1>Kitchen Dashboard</h1>
+        <p>Approved orders appear here for preparation and waiter handoff.</p>
+      </div>
+      <div class="chip">{% now "d M Y" %}</div>
+    </header>
+
+    <div class="metrics">
+      <div class="metric">
+        <div class="label">Queue Items</div>
+        <div class="value">{{ queue_items|length }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Prepared History</div>
+        <div class="value">{{ prepared_items|length }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Ready Items</div>
+        <div class="value">{{ ready_count }}</div>
+      </div>
+      <div class="metric">
+        <div class="label">Logged User</div>
+        <div class="value" style="font-size:20px; line-height:1.2;">{{ request.user.username }}</div>
+      </div>
+    </div>
+
+    <article id="queue" class="panel">
+      <h2>Preparation Queue</h2>
+      <p class="sub">Only incoming kitchen work appears here (Ordered and Preparing).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Customer</th>
+              <th>Table</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in queue_items %}
+              <tr>
+                <td>#{{ item.session.id }}</td>
+                <td>{{ item.session.customer_name|default:"Guest" }}</td>
+                <td>{{ item.session.table.table_number }}</td>
+                <td>{{ item.menu_item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td><span class="status-chip {{ item.status }}">{{ item.status }}</span></td>
+                <td>
+                  {% if item.status == 'ordered' %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="update_item_status">
+                      <input type="hidden" name="item_id" value="{{ item.id }}">
+                      <input type="hidden" name="next_status" value="preparing">
+                      <button class="btn btn-start" type="submit">Start Preparing</button>
+                    </form>
+                  {% elif item.status == 'preparing' %}
+                    <form method="post">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="update_item_status">
+                      <input type="hidden" name="item_id" value="{{ item.id }}">
+                      <input type="hidden" name="next_status" value="ready">
+                      <button class="btn btn-ready" type="submit">Mark Ready</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7">No approved orders in queue.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if queue_items.paginator.num_pages > 1 %}
+        <div class="pager">
+          {% if queue_items.has_previous %}
+            <a href="?queue_page={{ queue_items.previous_page_number }}&history_page={{ prepared_items.number }}#queue">Previous</a>
           {% endif %}
-        </td>
-      </tr>
-      {% empty %}
-      <tr><td colspan="7" style="padding:8px;">No approved orders in queue.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <span class="current">Page {{ queue_items.number }} of {{ queue_items.paginator.num_pages }}</span>
+          {% if queue_items.has_next %}
+            <a href="?queue_page={{ queue_items.next_page_number }}&history_page={{ prepared_items.number }}#queue">Next</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </article>
+
+    <article id="history" class="panel">
+      <h3>Prepared Items History</h3>
+      <p class="sub">Ready and served items appear here as history.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Session</th>
+              <th>Customer</th>
+              <th>Table</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Status</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in prepared_items %}
+              <tr>
+                <td>#{{ item.session.id }}</td>
+                <td>{{ item.session.customer_name|default:"Guest" }}</td>
+                <td>{{ item.session.table.table_number }}</td>
+                <td>{{ item.menu_item.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td><span class="status-chip {{ item.status }}">{{ item.status }}</span></td>
+                <td>{{ item.created_at }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="7">No prepared history yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if prepared_items.paginator.num_pages > 1 %}
+        <div class="pager">
+          {% if prepared_items.has_previous %}
+            <a href="?queue_page={{ queue_items.number }}&history_page={{ prepared_items.previous_page_number }}#history">Previous</a>
+          {% endif %}
+          <span class="current">Page {{ prepared_items.number }} of {{ prepared_items.paginator.num_pages }}</span>
+          {% if prepared_items.has_next %}
+            <a href="?queue_page={{ queue_items.number }}&history_page={{ prepared_items.next_page_number }}#history">Next</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </article>
+  </section>
 </div>
+
 <script>
   setTimeout(function () {
     window.location.reload();

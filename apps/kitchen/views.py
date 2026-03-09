@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 
 from apps.core.roles import ROLE_KITCHEN, get_role_home_url, get_user_role
@@ -31,9 +32,35 @@ def kitchen_dashboard(request):
         OrderItem.objects.select_related('session', 'session__table', 'session__table__restaurant', 'menu_item')
         .filter(
             session__status__in=[OrderSession.Status.ACTIVE, OrderSession.Status.PAYMENT_REQUESTED],
-            status__in=[OrderItem.Status.ORDERED, OrderItem.Status.PREPARING, OrderItem.Status.READY],
+            status__in=[OrderItem.Status.ORDERED, OrderItem.Status.PREPARING],
         )
         .order_by('created_at')
     )
+    queue_paginator = Paginator(queue_items, 15)
+    queue_page_obj = queue_paginator.get_page(request.GET.get('queue_page'))
 
-    return render(request, 'kitchen/dashboard.html', {'queue_items': queue_items})
+    ready_count = (
+        OrderItem.objects.filter(
+            session__status__in=[OrderSession.Status.ACTIVE, OrderSession.Status.PAYMENT_REQUESTED],
+            status=OrderItem.Status.READY,
+        )
+        .count()
+    )
+
+    prepared_items = (
+        OrderItem.objects.select_related('session', 'session__table', 'session__table__restaurant', 'menu_item')
+        .filter(status__in=[OrderItem.Status.READY, OrderItem.Status.SERVED])
+        .order_by('-created_at')[:250]
+    )
+    prepared_paginator = Paginator(prepared_items, 15)
+    prepared_page_obj = prepared_paginator.get_page(request.GET.get('history_page'))
+
+    return render(
+        request,
+        'kitchen/dashboard.html',
+        {
+            'queue_items': queue_page_obj,
+            'prepared_items': prepared_page_obj,
+            'ready_count': ready_count,
+        },
+    )
